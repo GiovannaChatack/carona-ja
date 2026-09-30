@@ -4,6 +4,11 @@ import { expect, test, type Page } from '@playwright/test'
 const email = process.env.E2E_EMAIL
 const senha = process.env.E2E_SENHA
 
+// A saudação é o h1 de /inicio. getByText('Olá,') também acharia o anunciador de rotas do Next.
+function saudacao(page: Page) {
+  return page.getByRole('heading', { name: /^Olá,/ })
+}
+
 async function entrar(page: Page, senhaUsada = senha!) {
   await page.getByLabel('E-mail').fill(email!)
   await page.getByLabel('Senha').fill(senhaUsada)
@@ -15,7 +20,7 @@ async function entrar(page: Page, senhaUsada = senha!) {
 async function entrarComSucesso(page: Page) {
   await entrar(page)
   const recusado = page.getByText('E-mail ou senha inválidos.')
-  await expect(page.getByText('Olá,').or(recusado)).toBeVisible()
+  await expect(saudacao(page).or(recusado)).toBeVisible()
   if (await recusado.isVisible()) {
     throw new Error(
       'O Supabase recusou E2E_EMAIL/E2E_SENHA. Crie a conta de teste em Auth → Users ' +
@@ -54,7 +59,7 @@ test.describe('com conta de teste', () => {
 
     // A sessão sobrevive a um recarregamento.
     await page.reload()
-    await expect(page.getByText('Olá,')).toBeVisible()
+    await expect(saudacao(page)).toBeVisible()
 
     await page.getByRole('button', { name: 'Sair' }).click()
     await expect(page).toHaveURL(/\/entrar$/)
