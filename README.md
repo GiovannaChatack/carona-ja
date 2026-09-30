@@ -131,13 +131,13 @@ Medição em produção (`https://carona-ja-theta.vercel.app`), Lighthouse 12.8,
 throttling simulado de 4G lento (RTT 150 ms, 1,6 Mbps, CPU 4×). Meta: carregamento ≤ 3 s (SC-003)
 e acessibilidade ≥ 90.
 
-| Página    | Data       | LCP (carregamento) | FCP       | Desempenho | Acessibilidade | Resultado |
-| --------- | ---------- | ------------------ | --------- | ---------- | -------------- | --------- |
-| `/entrar` | 30/09/2026 | 2,3–2,6 s          | 0,9–1,1 s | 87–92      | 100            | ✅        |
-| `/inicio` | —          | pendente           | pendente  | pendente   | pendente       | pendente  |
+| Página    | Data       | LCP (carregamento) | FCP       | Desempenho | Acessibilidade | Resultado  |
+| --------- | ---------- | ------------------ | --------- | ---------- | -------------- | ---------- |
+| `/entrar` | 30/09/2026 | 2,3–2,6 s          | 0,9–1,1 s | 87–92      | 100            | ✅         |
+| `/inicio` | —          | não medida         | —         | —          | —              | dispensada |
 
-`/entrar` foi medida três vezes (faixa dos resultados). `/inicio` exige login e é medida pelo
-Chrome DevTools → Lighthouse, com a sessão aberta.
+`/entrar` foi medida três vezes (faixa dos resultados). `/inicio` exige login; a medição foi
+dispensada neste slice e pode ser feita pelo Chrome DevTools → Lighthouse, com a sessão aberta.
 
 ```bash
 npx lighthouse https://<url-produção>/entrar --form-factor=mobile --only-categories=performance,accessibility --view

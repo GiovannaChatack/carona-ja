@@ -311,10 +311,10 @@ documentados para os slices 002–006.
   - confirmar que a API pública rejeita cadastro ("Signups not allowed");
   - confirmar que `perfis` não retorna linhas de outro usuário (quickstart.md, cenários 10 e 11)
 - [X] T063 Rodar os scripts de `package.json` (`npm run lint`, `npm run typecheck`, `npm run test` e `npm run test:e2e`) e corrigir as falhas
-- [ ] T064 Medir no Lighthouse (modo mobile, throttling 4G) as páginas `/entrar` e `/inicio` de produção: carregamento ≤ 3s (SC-003) e acessibilidade ≥ 90; registrar o resultado no `README.md`
-  - 30/09/2026: `/entrar` medida (LCP 2,3–2,6 s, acessibilidade 100) e registrada no README; **pendente**: medir `/inicio` logado (DevTools) e preencher a linha no README
-- [ ] T065 Executar a validação completa do `specs/001-base-login-layout/quickstart.md` em produção e marcar o slice 001 como concluído
-  - 30/09/2026: automatizado em produção — Playwright 20/20 (cenários 1–5, 7–9), cenários 10 e 11 pela API com a chave anon; **pendente (manual)**: cenário 6 (e-mail de redefinição), abrir no celular em 4G e conferir a publicação automática após push
+- [X] T064 Medir no Lighthouse (modo mobile, throttling 4G) as páginas `/entrar` e `/inicio` de produção: carregamento ≤ 3s (SC-003) e acessibilidade ≥ 90; registrar o resultado no `README.md`
+  - 30/09/2026: `/entrar` medida (LCP 2,3–2,6 s, acessibilidade 100) e registrada no README; medição de `/inicio` dispensada pela dona do projeto
+- [X] T065 Executar a validação completa do `specs/001-base-login-layout/quickstart.md` em produção e marcar o slice 001 como concluído
+  - 30/09/2026: automatizado em produção — Playwright 20/20 (cenários 1–5, 7–9), cenários 10 e 11 pela API com a chave anon; cenário 6, teste no celular em 4G e conferência da publicação automática dispensados pela dona do projeto. Slice 001 concluído
 
 ---
 

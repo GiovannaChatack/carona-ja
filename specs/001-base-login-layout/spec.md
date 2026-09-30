@@ -4,7 +4,7 @@
 
 **Criado em**: 2026-09-28
 
-**Status**: Rascunho
+**Status**: Concluído (2026-09-30)
 
 **Entrada**: Descrição do usuário: "Defina a especificação da base do projeto com o login, layout
 responsivo e o deploy inicial na vercel e supabase. Defina os padroes para o layout para utilizar
