@@ -254,7 +254,7 @@ após confirmação (quickstart, cenários 12–14).
 
 ### Testes da História 4
 
-- [ ] T034 [P] [US4] Acrescentar a `tests/e2e/passageiros.spec.ts` o bloco `US4 – arquivar, reativar e excluir`:
+- [X] T034 [P] [US4] Acrescentar a `tests/e2e/passageiros.spec.ts` o bloco `US4 – arquivar, reativar e excluir`:
   - "Arquivar" abre o diálogo "Arquivar passageiro?"; ao confirmar, os detalhes mostram o toast "Passageiro arquivado", "Arquivado em DD/MM/AAAA" e o aviso de arquivado;
   - o passageiro some da lista de ativos e aparece com o filtro "Arquivados" (`?situacao=arquivados`);
   - com outro passageiro ativo de mesmo nome, "Reativar" mostra "Já existe um passageiro ativo com esse nome. Renomeie um deles antes de reativar.";
@@ -263,30 +263,30 @@ após confirmação (quickstart, cenários 12–14).
 
 ### Implementação da História 4
 
-- [ ] T035 [US4] Acrescentar a `app/(app)/passageiros/actions.ts`, conforme [contracts/acoes.md](./contracts/acoes.md), as actions `arquivarPassageiro`, `reativarPassageiro` e `excluirPassageiro`, todas com a assinatura `(id: string, estado: EstadoAcaoPassageiro): Promise<EstadoAcaoPassageiro>` para uso com `.bind(null, id)` e `useActionState`:
+- [X] T035 [US4] Acrescentar a `app/(app)/passageiros/actions.ts`, conforme [contracts/acoes.md](./contracts/acoes.md), as actions `arquivarPassageiro`, `reativarPassageiro` e `excluirPassageiro`, todas com a assinatura `(id: string, estado: EstadoAcaoPassageiro): Promise<EstadoAcaoPassageiro>` para uso com `.bind(null, id)` e `useActionState`:
   - `!ehUuid(id)` → `erro` "Passageiro não encontrado.";
   - arquivar: `update({ arquivado_em: new Date().toISOString() }).eq('id', id).is('arquivado_em', null)` → `redirect('/passageiros/<id>?aviso=arquivado')`;
   - reativar: `update({ arquivado_em: null }).eq('id', id)`; `23505` → "Já existe um passageiro ativo com esse nome. Renomeie um deles antes de reativar." → sucesso `redirect('/passageiros/<id>?aviso=reativado')`;
   - excluir: `delete().eq('id', id)`; `23503` → "Este passageiro tem viagens registradas e não pode ser excluído. Arquive-o." → sucesso `redirect('/passageiros?aviso=excluido')`;
   - outros erros → "Não foi possível salvar. Tente novamente."; sempre `revalidatePath('/passageiros')` e `revalidatePath('/passageiros/<id>')` antes do `redirect`, que fica fora do try/catch
-- [ ] T036 [US4] Criar `app/(app)/passageiros/[id]/acoes-passageiro.tsx` (cliente) com props `id`, `nome` e `arquivado: boolean`:
+- [X] T036 [US4] Criar `app/(app)/passageiros/[id]/acoes-passageiro.tsx` (cliente) com props `id`, `nome` e `arquivado: boolean`:
   - ativo: "Arquivar" (`secondary`, ícone `Archive`) com `ConfirmDialog` (título "Arquivar passageiro?", descrição e botão conforme a tabela "Diálogos de confirmação" de [contracts/rotas.md](./contracts/rotas.md));
   - arquivado: "Reativar" (ícone `ArchiveRestore`), sem confirmação;
   - ambos: "Excluir" (`destructive`, ícone `Trash2`) com `ConfirmDialog` "Excluir passageiro?";
   - cada action via `useActionState(acao.bind(null, id), {})`, disparada em `startTransition` no `onConfirmar`; botões desabilitados enquanto `pending`; `estado.erro` exibido em `<p role="alert">`
-- [ ] T037 [US4] Em `app/(app)/passageiros/[id]/page.tsx`: renderizar `AcoesPassageiro` junto do botão "Editar" e, quando arquivado, a faixa "Este passageiro está arquivado e não aparece na seleção de novas viagens."
-- [ ] T038 [US4] Adicionar o filtro por situação à lista:
+- [X] T037 [US4] Em `app/(app)/passageiros/[id]/page.tsx`: renderizar `AcoesPassageiro` junto do botão "Editar" e, quando arquivado, a faixa "Este passageiro está arquivado e não aparece na seleção de novas viagens."
+- [X] T038 [US4] Adicionar o filtro por situação à lista:
   - `app/(app)/passageiros/page.tsx` lê `?situacao` (`'arquivados'` ou, qualquer outro valor, ativos), carrega `listarPassageiros(situacao)`, passa `situacao` para a lista e adiciona `excluido: 'Passageiro excluído'` às mensagens do `AvisoUrl`;
   - `app/(app)/passageiros/lista-passageiros.tsx` mostra a alternância "Ativos" / "Arquivados" (dois links com `aria-current`, preservando `busca`, alvos ≥ 44px) e, nos arquivados sem resultado, o `EmptyState` "Nenhum passageiro arquivado"
-- [ ] T039 [US4] Rodar `npm run lint`, `npm run typecheck`, `npm run test` e `npm run test:e2e` e corrigir as falhas
+- [X] T039 [US4] Rodar `npm run lint`, `npm run typecheck`, `npm run test` e `npm run test:e2e` e corrigir as falhas
 
 **Checkpoint**: gestão completa de passageiros funcionando.
 
 ## Fase 6: Acabamento e encerramento do slice
 
-- [ ] T040 [P] Corrigir o `README.md` na seção "Padrões para os próximos slices": no exemplo de migração, trocar `usuario_id` por `motorista_id` (coluna e políticas) e citar `supabase/migrations/<timestamp>_passageiros.sql` como modelo de tabela de domínio; no exemplo de `nav-items.ts`, manter "Passageiros" como item real (research §1)
-- [ ] T041 [P] Acrescentar em `specs/001-base-login-layout/data-model.md` (Parte 2, seção `passageiros`) uma nota apontando para `specs/002-registro-passageiros/data-model.md`, que tornou o telefone obrigatório e adicionou `observacao`
-- [ ] T042 Revisão de segurança (Princípio VI): buscar por `service_role` no repositório (nenhum resultado fora de comentários/`.env.example`); confirmar que nenhuma action lê `motorista_id` do formulário; repetir os cenários 17 e 18 do [quickstart.md](./quickstart.md)
+- [X] T040 [P] Corrigir o `README.md` na seção "Padrões para os próximos slices": no exemplo de migração, trocar `usuario_id` por `motorista_id` (coluna e políticas) e citar `supabase/migrations/<timestamp>_passageiros.sql` como modelo de tabela de domínio; no exemplo de `nav-items.ts`, manter "Passageiros" como item real (research §1)
+- [X] T041 [P] Acrescentar em `specs/001-base-login-layout/data-model.md` (Parte 2, seção `passageiros`) uma nota apontando para `specs/002-registro-passageiros/data-model.md`, que tornou o telefone obrigatório e adicionou `observacao`
+- [X] T042 Revisão de segurança (Princípio VI): buscar por `service_role` no repositório (nenhum resultado fora de comentários/`.env.example`); confirmar que nenhuma action lê `motorista_id` do formulário; repetir os cenários 17 e 18 do [quickstart.md](./quickstart.md)
 - [ ] T043 Commit em pt-BR, push na `main` e aguardar o deploy na Vercel
 - [ ] T044 Executar a validação completa do [quickstart.md](./quickstart.md) em produção (cenários 1–19, no celular e no desktop) e registrar o resultado nesta tarefa
 - [ ] T045 Marcar o slice como concluído: `**Status**: Concluído (<data>)` em `specs/002-registro-passageiros/spec.md`; commit e push

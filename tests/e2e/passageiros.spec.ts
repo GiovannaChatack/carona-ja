@@ -252,3 +252,105 @@ test.describe('US3 – edição', () => {
     expect(await semRolagemHorizontal(page), 'rolagem horizontal na edição').toBe(true)
   })
 })
+
+test.describe('US4 – arquivar, reativar e excluir', () => {
+  test.skip(!email || !senha, 'Defina E2E_EMAIL e E2E_SENHA para rodar estes cenários.')
+  test.afterAll(limparPassageirosDeTeste)
+
+  async function abrirDetalhes(page: Page, nome: string, situacao = '') {
+    await page.goto(`/passageiros${situacao}`)
+    await itemDaLista(page, nome).getByRole('link', { name: nome }).click()
+    await expect(page.getByRole('heading', { name: nome, level: 1 })).toBeVisible()
+  }
+
+  function dialogo(page: Page) {
+    return page.getByRole('alertdialog')
+  }
+
+  test('arquivar, ver em Arquivados e cancelar os diálogos', async ({ page }) => {
+    await entrarComContaDeTeste(page, '/passageiros')
+    const nome = nomeDeTeste('Arquivar')
+    await cadastrar(page, nome)
+    await abrirDetalhes(page, nome)
+
+    // Cancelar não altera nada.
+    await page.getByRole('button', { name: 'Arquivar', exact: true }).click()
+    await expect(dialogo(page).getByText('Arquivar passageiro?')).toBeVisible()
+    await dialogo(page).getByRole('button', { name: 'Cancelar' }).click()
+    await expect(dialogo(page)).toHaveCount(0)
+    await expect(page.getByText('Ativo', { exact: true })).toBeVisible()
+
+    await page.getByRole('button', { name: 'Arquivar', exact: true }).click()
+    await dialogo(page).getByRole('button', { name: 'Arquivar', exact: true }).click()
+    await expect(page.getByText('Passageiro arquivado')).toBeVisible()
+    await expect(page.getByText(/Arquivado em \d{2}\/\d{2}\/\d{4}/)).toBeVisible()
+    await expect(page.getByText('Este passageiro está arquivado', { exact: false })).toBeVisible()
+
+    await page.goto('/passageiros')
+    await expect(itemDaLista(page, nome)).toHaveCount(0)
+    await page.getByRole('link', { name: 'Arquivados' }).click()
+    await expect(page).toHaveURL(/situacao=arquivados/)
+    await expect(itemDaLista(page, nome)).toBeVisible()
+  })
+
+  test('reativar é recusado se já há um ativo com o mesmo nome', async ({ page }) => {
+    await entrarComContaDeTeste(page, '/passageiros')
+    const nome = nomeDeTeste('Reativar')
+    await cadastrar(page, nome)
+    await abrirDetalhes(page, nome)
+    await page.getByRole('button', { name: 'Arquivar', exact: true }).click()
+    await dialogo(page).getByRole('button', { name: 'Arquivar', exact: true }).click()
+    await expect(page.getByText('Passageiro arquivado')).toBeVisible()
+
+    // Novo ativo com o mesmo nome (o índice único só vale entre os ativos).
+    await cadastrar(page, nome)
+    await abrirDetalhes(page, nome, '?situacao=arquivados')
+    await page.getByRole('button', { name: 'Reativar' }).click()
+    await expect(
+      page.getByText(
+        'Já existe um passageiro ativo com esse nome. Renomeie um deles antes de reativar.',
+      ),
+    ).toBeVisible()
+  })
+
+  test('reativar sem conflito volta a ativo', async ({ page }) => {
+    await entrarComContaDeTeste(page, '/passageiros')
+    const nome = nomeDeTeste('Volta')
+    await cadastrar(page, nome)
+    await abrirDetalhes(page, nome)
+    await page.getByRole('button', { name: 'Arquivar', exact: true }).click()
+    await dialogo(page).getByRole('button', { name: 'Arquivar', exact: true }).click()
+    await expect(page.getByText('Passageiro arquivado')).toBeVisible()
+
+    await page.getByRole('button', { name: 'Reativar' }).click()
+    await expect(page.getByText('Passageiro reativado')).toBeVisible()
+    await expect(page.getByText('Ativo', { exact: true })).toBeVisible()
+  })
+
+  test('excluir com confirmação remove o passageiro de todos os filtros', async ({ page }) => {
+    await entrarComContaDeTeste(page, '/passageiros')
+    const nome = nomeDeTeste('Excluir')
+    await cadastrar(page, nome)
+    await abrirDetalhes(page, nome)
+
+    await page.getByRole('button', { name: 'Excluir', exact: true }).click()
+    await expect(dialogo(page).getByText('Excluir passageiro?')).toBeVisible()
+    await dialogo(page).getByRole('button', { name: 'Cancelar' }).click()
+    await expect(page.getByRole('heading', { name: nome, level: 1 })).toBeVisible()
+
+    await page.getByRole('button', { name: 'Excluir', exact: true }).click()
+    await dialogo(page).getByRole('button', { name: 'Excluir', exact: true }).click()
+    await expect(page.getByText('Passageiro excluído')).toBeVisible()
+    await expect(page).toHaveURL(/\/passageiros(\?.*)?$/)
+    await expect(itemDaLista(page, nome)).toHaveCount(0)
+    await page.goto('/passageiros?situacao=arquivados')
+    await expect(itemDaLista(page, nome)).toHaveCount(0)
+  })
+
+  test('sem rolagem horizontal na lista de arquivados', async ({ page }) => {
+    await entrarComContaDeTeste(page, '/passageiros')
+    await page.goto('/passageiros?situacao=arquivados')
+    await expect(page.getByRole('heading', { name: 'Passageiros', level: 1 })).toBeVisible()
+    expect(await semRolagemHorizontal(page)).toBe(true)
+  })
+})

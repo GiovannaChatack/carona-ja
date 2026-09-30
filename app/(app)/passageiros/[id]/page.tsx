@@ -12,6 +12,8 @@ import { obterUsuarioLogado } from '@/lib/auth/sessao'
 import { formatCurrency, formatDate, formatPhone } from '@/lib/format'
 import { obterPassageiro } from '@/lib/passageiros/consultas'
 
+import { AcoesPassageiro } from './acoes-passageiro'
+
 type Props = {
   params: Promise<{ id: string }>
   searchParams: Promise<{ de?: string | string[] }>
@@ -91,6 +93,11 @@ export default async function PassageiroPage({ params, searchParams }: Props) {
           </dl>
         </CardContent>
       </Card>
+      {passageiro.arquivado_em && (
+        <p className="rounded-lg border bg-muted px-4 py-3 text-sm">
+          Este passageiro está arquivado e não aparece na seleção de novas viagens.
+        </p>
+      )}
       <div className="flex flex-wrap gap-3">
         <Button asChild variant="outline">
           <Link href={`/passageiros/${passageiro.id}/editar`}>
@@ -98,6 +105,11 @@ export default async function PassageiroPage({ params, searchParams }: Props) {
             Editar
           </Link>
         </Button>
+        <AcoesPassageiro
+          id={passageiro.id}
+          nome={passageiro.nome}
+          arquivado={passageiro.arquivado_em !== null}
+        />
       </div>
       <Suspense>
         <AvisoUrl

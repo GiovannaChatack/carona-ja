@@ -11,8 +11,9 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { formatCurrency, formatPhone } from '@/lib/format'
-import type { Passageiro } from '@/lib/passageiros/tipos'
+import type { Passageiro, SituacaoPassageiro } from '@/lib/passageiros/tipos'
 import { normalizarParaBusca } from '@/lib/passageiros/validacao'
+import { cn } from '@/lib/utils'
 
 // `de` é a querystring da lista: os detalhes a usam para o "voltar" reabrir a mesma busca.
 function montarColunas(de: string): Coluna<Passageiro>[] {
@@ -52,9 +53,47 @@ function montarColunas(de: string): Coluna<Passageiro>[] {
   ]
 }
 
+// Alternância Ativos/Arquivados: links que preservam a busca.
+function AlternanciaSituacao({ situacao, busca }: { situacao: SituacaoPassageiro; busca: string }) {
+  const opcoes: { valor: SituacaoPassageiro; rotulo: string }[] = [
+    { valor: 'ativos', rotulo: 'Ativos' },
+    { valor: 'arquivados', rotulo: 'Arquivados' },
+  ]
+  return (
+    <nav aria-label="Situação" className="flex w-fit gap-1 rounded-lg bg-muted p-1">
+      {opcoes.map(({ valor, rotulo }) => {
+        const params = new URLSearchParams()
+        if (valor === 'arquivados') params.set('situacao', valor)
+        if (busca) params.set('busca', busca)
+        const query = params.toString()
+        const atual = valor === situacao
+        return (
+          <Link
+            key={valor}
+            href={query ? `/passageiros?${query}` : '/passageiros'}
+            aria-current={atual ? 'page' : undefined}
+            className={cn(
+              'inline-flex h-11 min-w-24 items-center justify-center rounded-md px-4 text-sm font-medium',
+              atual ? 'bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground',
+            )}
+          >
+            {rotulo}
+          </Link>
+        )
+      })}
+    </nav>
+  )
+}
+
 // Lista com busca instantânea no cliente; o texto é espelhado em ?busca= (research §6).
 // Renderizar dentro de <Suspense> por usar useSearchParams.
-export function ListaPassageiros({ passageiros }: { passageiros: Passageiro[] }) {
+export function ListaPassageiros({
+  passageiros,
+  situacao,
+}: {
+  passageiros: Passageiro[]
+  situacao: SituacaoPassageiro
+}) {
   const searchParams = useSearchParams()
   const router = useRouter()
   const pathname = usePathname()
@@ -71,18 +110,31 @@ export function ListaPassageiros({ passageiros }: { passageiros: Passageiro[] })
 
   const colunas = montarColunas(searchParams.toString())
 
+  const alternancia = <AlternanciaSituacao situacao={situacao} busca={busca} />
+
   if (passageiros.length === 0) {
     return (
-      <EmptyState
-        icone={Users}
-        titulo="Nenhum passageiro cadastrado"
-        descricao="Cadastre as pessoas que pegam carona com você para registrar viagens e cobranças."
-        acao={
-          <Button asChild>
-            <Link href="/passageiros/novo">Novo passageiro</Link>
-          </Button>
-        }
-      />
+      <div className="flex flex-col gap-4">
+        {alternancia}
+        {situacao === 'arquivados' ? (
+          <EmptyState
+            icone={Users}
+            titulo="Nenhum passageiro arquivado"
+            descricao="Os passageiros que você arquivar aparecem aqui e podem ser reativados."
+          />
+        ) : (
+          <EmptyState
+            icone={Users}
+            titulo="Nenhum passageiro cadastrado"
+            descricao="Cadastre as pessoas que pegam carona com você para registrar viagens e cobranças."
+            acao={
+              <Button asChild>
+                <Link href="/passageiros/novo">Novo passageiro</Link>
+              </Button>
+            }
+          />
+        )}
+      </div>
     )
   }
 
@@ -93,6 +145,7 @@ export function ListaPassageiros({ passageiros }: { passageiros: Passageiro[] })
 
   return (
     <div className="flex flex-col gap-4">
+      {alternancia}
       <div className="relative w-full md:max-w-sm">
         <Label htmlFor="busca" className="sr-only">
           Buscar por nome

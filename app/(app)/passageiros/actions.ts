@@ -3,7 +3,11 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 
-import type { CamposPassageiro, EstadoFormularioPassageiro } from '@/lib/passageiros/tipos'
+import type {
+  CamposPassageiro,
+  EstadoAcaoPassageiro,
+  EstadoFormularioPassageiro,
+} from '@/lib/passageiros/tipos'
 import { ehUuid, validarPassageiro } from '@/lib/passageiros/validacao'
 import { createClient } from '@/lib/supabase/server'
 
@@ -75,4 +79,84 @@ export async function editarPassageiro(
   revalidatePath('/passageiros')
   revalidatePath(`/passageiros/${id}`)
   redirect(`/passageiros/${id}?aviso=atualizado`)
+}
+
+// Efeito comum de arquivar, reativar e excluir: revalida as telas e redireciona no sucesso.
+function concluirAcao(id: string, destino: string): never {
+  revalidatePath('/passageiros')
+  revalidatePath(`/passageiros/${id}`)
+  // Fora do try/catch das actions: redirect lança uma exceção de controle do Next.
+  redirect(destino)
+}
+
+export async function arquivarPassageiro(
+  id: string,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- assinatura exigida por useActionState
+  _estado: EstadoAcaoPassageiro,
+): Promise<EstadoAcaoPassageiro> {
+  if (!ehUuid(id)) return { erro: ERRO_NAO_ENCONTRADO }
+
+  try {
+    const supabase = await createClient()
+    const { data, error } = await supabase
+      .from('passageiros')
+      .update({ arquivado_em: new Date().toISOString() })
+      .eq('id', id)
+      .is('arquivado_em', null)
+      .select('id')
+    if (error) return { erro: ERRO_GENERICO }
+    if (!data || data.length === 0) return { erro: ERRO_NAO_ENCONTRADO }
+  } catch {
+    return { erro: ERRO_GENERICO }
+  }
+
+  concluirAcao(id, `/passageiros/${id}?aviso=arquivado`)
+}
+
+export async function reativarPassageiro(
+  id: string,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- assinatura exigida por useActionState
+  _estado: EstadoAcaoPassageiro,
+): Promise<EstadoAcaoPassageiro> {
+  if (!ehUuid(id)) return { erro: ERRO_NAO_ENCONTRADO }
+
+  try {
+    const supabase = await createClient()
+    const { data, error } = await supabase
+      .from('passageiros')
+      .update({ arquivado_em: null })
+      .eq('id', id)
+      .select('id')
+    if (error?.code === '23505') {
+      return { erro: `${ERRO_NOME_DUPLICADO} Renomeie um deles antes de reativar.` }
+    }
+    if (error) return { erro: ERRO_GENERICO }
+    if (!data || data.length === 0) return { erro: ERRO_NAO_ENCONTRADO }
+  } catch {
+    return { erro: ERRO_GENERICO }
+  }
+
+  concluirAcao(id, `/passageiros/${id}?aviso=reativado`)
+}
+
+export async function excluirPassageiro(
+  id: string,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- assinatura exigida por useActionState
+  _estado: EstadoAcaoPassageiro,
+): Promise<EstadoAcaoPassageiro> {
+  if (!ehUuid(id)) return { erro: ERRO_NAO_ENCONTRADO }
+
+  try {
+    const supabase = await createClient()
+    const { data, error } = await supabase.from('passageiros').delete().eq('id', id).select('id')
+    if (error?.code === '23503') {
+      return { erro: 'Este passageiro tem viagens registradas e não pode ser excluído. Arquive-o.' }
+    }
+    if (error) return { erro: ERRO_GENERICO }
+    if (!data || data.length === 0) return { erro: ERRO_NAO_ENCONTRADO }
+  } catch {
+    return { erro: ERRO_GENERICO }
+  }
+
+  concluirAcao(id, '/passageiros?aviso=excluido')
 }

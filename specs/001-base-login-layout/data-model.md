@@ -80,6 +80,8 @@ viagens    1───N viagem_passageiros N───1 passageiros
 
 ### `passageiros` (slice 002: Passageiros)
 
+> **Atualizado no slice 002**: o telefone passou a ser **obrigatório** (só dígitos, 10 ou 11) e a tabela ganhou a coluna `observacao`. A definição vigente está em [`specs/002-registro-passageiros/data-model.md`](../002-registro-passageiros/data-model.md).
+
 | Campo | Tipo | Regras |
 |-------|------|--------|
 | `id` | uuid | PK |

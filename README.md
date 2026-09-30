@@ -189,9 +189,9 @@ npx supabase migration new <nome_da_tabela>
 ```
 
 Use [`supabase/migrations/20260930033131_perfis.sql`](./supabase/migrations/20260930033131_perfis.sql)
-como modelo. Toda tabela nova deve:
+como modelo de tabela de perfil e, para tabelas de domínio, [`supabase/migrations/<timestamp>_passageiros.sql`](./supabase/migrations/) (`passageiros`). Toda tabela nova deve:
 
-1. ter uma coluna de dono, `usuario_id uuid not null default auth.uid() references auth.users (id) on delete cascade`
+1. ter uma coluna de dono, `motorista_id uuid not null default auth.uid() references auth.users (id) on delete cascade`
    (em `perfis`, o próprio `id` faz esse papel);
 2. reutilizar o trigger `public.definir_atualizado_em()` para a coluna `atualizado_em`;
 3. habilitar a RLS (`alter table ... enable row level security`);
@@ -201,20 +201,20 @@ como modelo. Toda tabela nova deve:
 ```sql
 create policy "<tabela>: dono lê os próprios registros"
   on public.<tabela> for select to authenticated
-  using (usuario_id = (select auth.uid()));
+  using (motorista_id = (select auth.uid()));
 
 create policy "<tabela>: dono insere os próprios registros"
   on public.<tabela> for insert to authenticated
-  with check (usuario_id = (select auth.uid()));
+  with check (motorista_id = (select auth.uid()));
 
 create policy "<tabela>: dono atualiza os próprios registros"
   on public.<tabela> for update to authenticated
-  using (usuario_id = (select auth.uid()))
-  with check (usuario_id = (select auth.uid()));
+  using (motorista_id = (select auth.uid()))
+  with check (motorista_id = (select auth.uid()));
 
 create policy "<tabela>: dono exclui os próprios registros"
   on public.<tabela> for delete to authenticated
-  using (usuario_id = (select auth.uid()));
+  using (motorista_id = (select auth.uid()));
 ```
 
 Aplique com `npx supabase db push` e confirme, com a chave anon, que outro usuário não vê as
