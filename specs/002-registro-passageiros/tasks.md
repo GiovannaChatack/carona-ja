@@ -159,6 +159,11 @@ lista formatada no celular e no desktop (quickstart, cenários 1–7 e 16).
   - commit em pt-BR e push na `main`; aguardar o deploy na Vercel;
   - **(manual)** confirmar que a migração está aplicada no Supabase de produção (T002);
   - validar em produção os cenários 1–7, 9 (telefone na lista), 16 (lista e formulário), 17 e 18 do [quickstart.md](./quickstart.md) (a segunda conta vê a lista vazia; a API anon não retorna linhas)
+  - **Resultado (2026-09-30)**: commit `4e68030` publicado. Migração aplicada com `db push` no
+    projeto vinculado (`kvsnosinltdcqwogfmpk`). `passageiros.spec.ts` + `layout.spec.ts` com
+    `E2E_BASE_URL` de produção: 22/22 (mobile e desktop), cobrindo os cenários 1–7, 9 (`href`
+    `tel:`) e 16 (360/1280px). Cenário 18: sem sessão, a API anon retorna `[]` na leitura e `42501`
+    no insert. **Pendente**: cenário 17 (segunda conta de teste), manual.
 
 **Checkpoint da Fatia A**: agenda de passageiros publicada e utilizável sozinha (MVP).
 
