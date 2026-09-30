@@ -100,9 +100,9 @@ ação manual (quickstart.md, "Validação da publicação").
   - importar o repositório na Vercel e configurar as variáveis em Production e Preview;
   - rodar `npm run dev`, `npm run test` e `npm run test:e2e`;
   - uma observação sobre a pausa do plano gratuito do Supabase após cerca de 7 dias sem uso (FR-023, SC-006)
-- [ ] T017 [US3] **(manual)** Criar o projeto no Supabase (região São Paulo `sa-east-1`), copiar a URL e a chave anon para `.env.local`, desligar "Allow new users to sign up" em Auth → Providers → Email e rodar `npx supabase link --project-ref <ref>`
-- [ ] T018 [US3] **(manual)** Criar o repositório no GitHub, confirmar que `.gitignore` exclui `.env.local`, fazer o primeiro commit e o `git push -u origin main`
-- [ ] T019 [US3] **(manual)** Importar o repositório na Vercel (framework Next.js, branch de produção `main`), cadastrar as três variáveis de `.env.example` (ver `specs/001-base-login-layout/contracts/ambiente.md`) em Production e Preview e fazer o deploy; em seguida, definir `NEXT_PUBLIC_SITE_URL` com a URL de produção e, no Supabase, preencher Auth → URL Configuration: Site URL = URL de produção; Redirect URLs = `<url-produção>/**`, `http://localhost:3000/**` e o padrão de previews da Vercel
+- [X] T017 [US3] **(manual)** Criar o projeto no Supabase (região São Paulo `sa-east-1`), copiar a URL e a chave anon para `.env.local`, desligar "Allow new users to sign up" em Auth → Providers → Email e rodar `npx supabase link --project-ref <ref>`
+- [X] T018 [US3] **(manual)** Criar o repositório no GitHub, confirmar que `.gitignore` exclui `.env.local`, fazer o primeiro commit e o `git push -u origin main`
+- [X] T019 [US3] **(manual)** Importar o repositório na Vercel (framework Next.js, branch de produção `main`), cadastrar as três variáveis de `.env.example` (ver `specs/001-base-login-layout/contracts/ambiente.md`) em Production e Preview e fazer o deploy; em seguida, definir `NEXT_PUBLIC_SITE_URL` com a URL de produção e, no Supabase, preencher Auth → URL Configuration: Site URL = URL de produção; Redirect URLs = `<url-produção>/**`, `http://localhost:3000/**` e o padrão de previews da Vercel
 - [ ] T020 [US3] Validar a Fatia A: rodar `E2E_BASE_URL=<url-produção> npx playwright test tests/e2e/publicacao.spec.ts`, fazer push de uma alteração de texto e confirmar a publicação automática em ≤ 10 min (FR-020, FR-021, SC-005)
 
 **Checkpoint (Fatia A)**: o site está no ar, conectado ao Supabase e com deploy automático.

@@ -70,7 +70,7 @@ Detalhes em [`contracts/ambiente.md`](./specs/001-base-login-layout/contracts/am
 | -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
 | Authentication → Sign In / Providers → Email       | Provedor habilitado; **desligar** "Allow new users to sign up"                                                                             |
 | Authentication → URL Configuration → Site URL      | URL de produção (a mesma de `NEXT_PUBLIC_SITE_URL` na Vercel)                                                                              |
-| Authentication → URL Configuration → Redirect URLs | `<url-produção>/**`, `http://localhost:3000/**` e o padrão de previews da Vercel (ex.: `https://caronas-ja-*-<seu-usuario>.vercel.app/**`) |
+| Authentication → URL Configuration → Redirect URLs | `<url-produção>/**`, `http://localhost:3000/**` e o padrão de previews da Vercel (ex.: `https://carona-ja-*-giovanna-chatack.vercel.app/**`) |
 | Authentication → Email Templates → Reset Password  | Texto em pt-BR, com o link `{{ .SiteURL }}/auth/confirmar?token_hash={{ .TokenHash }}&type=recovery&next=/redefinir-senha`                 |
 | Authentication → Users → Add user                  | Criar a conta do dono (e-mail e senha), marcada como confirmada                                                                            |
 
@@ -84,7 +84,7 @@ Não existe cadastro público: a única forma de criar uma conta é pelo painel 
    - **Branch de produção**: `main`.
 3. Em **Settings → Environment Variables**, cadastre as três variáveis do `.env.example` nos
    ambientes **Production** e **Preview**. Em `NEXT_PUBLIC_SITE_URL`, use a URL de produção
-   (ex.: `https://caronas-ja.vercel.app`).
+   (ex.: `https://carona-ja-theta.vercel.app`).
 4. Faça o deploy. Depois de trocar variáveis, é preciso fazer um novo deploy (**Deployments →
    Redeploy**) para que elas tenham efeito.
 5. Volte ao Supabase e preencha a **Site URL** e as **Redirect URLs** com a URL de produção

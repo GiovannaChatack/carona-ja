@@ -9,7 +9,7 @@ export default async function Home() {
   return (
     <main className="flex flex-1 flex-col items-center justify-center gap-2 p-4 text-center">
       <h1 className="text-3xl font-semibold">Caronas Já</h1>
-      <p className="text-muted-foreground">Em construção</p>
+      <p className="text-muted-foreground">Em construção: login em breve</p>
       <p>{`Conexão com o banco: ${bancoOk ? 'OK' : 'indisponível'}`}</p>
     </main>
   )

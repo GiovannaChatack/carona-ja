@@ -7,7 +7,7 @@ Vercel (Production e Preview) e no `.env.local` para desenvolvimento.
 |----------|----------------------|-------------|-----------|
 | `NEXT_PUBLIC_SUPABASE_URL` | sim | sim | URL do projeto Supabase |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | sim | sim | Chave pública (anon/publishable). É segura no navegador **porque** todas as tabelas têm RLS |
-| `NEXT_PUBLIC_SITE_URL` | sim | sim | URL pública do site (ex.: `https://caronas-ja.vercel.app`); usada nos links de e-mail |
+| `NEXT_PUBLIC_SITE_URL` | sim | sim | URL pública do site (ex.: `https://carona-ja-theta.vercel.app`); usada nos links de e-mail |
 
 **Proibido**: `SUPABASE_SERVICE_ROLE_KEY` ou qualquer chave secreta no frontend ou no repositório
 (Princípio VI). Este slice não precisa de chave secreta.
