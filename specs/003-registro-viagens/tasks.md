@@ -398,10 +398,24 @@ delas (quickstart, cenários 12, 13, 16, 19, 22 e 23).
   - quando `temMais`, mostrar o link "Carregar mais" para a mesma URL com `pagina + 1` (`scroll={false}`, altura ≥ 44px)
 - [X] T044 [US3] Em `lib/trajetos/consultas.ts`, `obterTrajeto` passa a devolver `quantidade_viagens` (viagens ativas do trajeto, via `select('id', { count: 'exact', head: true })` em `viagens` com `trajeto_id` e `arquivada_em is null`), e `app/(app)/viagens/trajetos/[id]/page.tsx` mostra "Viagens registradas: N"
 - [X] T045 Rodar `npm run lint`, `npm run typecheck`, `npm run test` e `npm run test:e2e` e corrigir as falhas
-- [ ] T046 Fechar a Fatia B:
+- [X] T046 Fechar a Fatia B:
   - commit em pt-BR e push na `main`; aguardar o deploy;
   - **(manual)** confirmar a migração em produção (T027);
   - validar em produção os cenários 6–13, 16, 19, 22–24, 26 e 27 do [quickstart.md](./quickstart.md) e registrar o resultado nesta tarefa
+  - **Resultado (2026-09-30)**: migração `20260930172802_viagens.sql` aplicada pelo usuário com
+    `db push` (`--dry-run` confirma o banco em dia). Local (T045): lint, typecheck, 101/101
+    unitários e 92/92 e2e (2 workers), sem falhas. Commit `ad0d12a` publicado em
+    `https://carona-ja-theta.vercel.app`. `viagens`, `trajetos`, `layout` e `passageiros` com
+    `E2E_BASE_URL` de produção: 68/82 em paralelo; as 14 falhas (tempo esgotado de 5 s, inclusive
+    em telas de passageiros não alteradas) passaram 14/14 ao repetir em série. Cobre os cenários
+    6–12 (registro, percurso, total ao vivo, sugestão de trajeto, duplicidade, validação, detalhes),
+    13 (valor padrão alterado pela API não muda a viagem), 16 e 19 (exclusão bloqueada de passageiro
+    e trajeto com viagens), 22 ("Carregar mais"), 23 (404) e 24 (sem rolagem horizontal; barra do
+    total acima da navegação). Cenário 27 pela API com a chave anon: 0 linhas em `trajetos`,
+    `viagens`, `viagem_passageiros` e `viagens_resumo`, e `registrar_viagem` negada (`42501`).
+    Cenário 26 aproximado com a conta de teste e ids que não são dela: `CJ002` (trajeto), `CJ003`
+    (passageiro) e `23503` no `insert` direto em `viagem_passageiros`. A verificação com a segunda
+    conta real fica para a revisão de segurança (T065).
 
 **Checkpoint da Fatia B**: registro e consulta de viagens publicados (o núcleo do sistema).
 
