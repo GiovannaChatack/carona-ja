@@ -291,7 +291,7 @@ mostra a página 404 em pt-BR (quickstart.md, cenários 7–9).
   - fonte Geist via `next/font`, com tamanho base de 16px;
   - **uma** cor de destaque em `--primary`/`--primary-foreground` nos temas claro e escuro (sugestão: verde-azulado), com contraste ≥ 4.5:1 conferido nos dois temas (FR-010, FR-015)
 - [X] T059 [US2] Usar os formatadores de `lib/format.ts` onde houver datas na base (ex.: "Membro desde {formatDate(criado_em)}" no menu da conta, em `components/layout/app-header.tsx`), para validar a integração dos formatadores com a interface
-- [ ] T060 [US2] Validar e publicar a Fatia C: rodar `npm run test` e `npm run test:e2e`, fazer push na `main` e executar os cenários 7–9 do quickstart.md em produção, no celular real e no computador
+- [X] T060 [US2] Validar e publicar a Fatia C: rodar `npm run test` e `npm run test:e2e`, fazer push na `main` e executar os cenários 7–9 do quickstart.md em produção, no celular real e no computador
 
 **Checkpoint (Fatia C)**: o layout responsivo, o tema e os componentes base estão prontos e
 documentados para os slices 002–006.
