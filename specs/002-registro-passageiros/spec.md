@@ -4,7 +4,7 @@
 
 **Criado em**: 2026-09-30
 
-**Status**: Rascunho
+**Status**: Concluído (2026-09-30)
 
 **Entrada**: Descrição do usuário: "Crie a spec para a implementação da funcionalidade de registro
 de passageiros. Passageiros não são usuarios do aplicativo, apenas devem ser cadastrados por um
