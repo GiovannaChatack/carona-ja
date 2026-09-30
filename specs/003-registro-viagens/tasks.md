@@ -215,10 +215,19 @@ trajeto sem viagens (quickstart, cenários 20 e 21; o 19 fica para a Fatia B).
   - alternância "Ativos" / "Arquivados" (dois links com `aria-current`, alvos ≥ 44px);
   - vazio dos arquivados: `EmptyState` "Nenhum trajeto arquivado"
 - [X] T024 Rodar `npm run lint`, `npm run typecheck`, `npm run test` e `npm run test:e2e` e corrigir as falhas
-- [ ] T025 Fechar a Fatia A:
+- [X] T025 Fechar a Fatia A:
   - commit em pt-BR e push na `main`; aguardar o deploy na Vercel;
   - **(manual)** confirmar a migração no Supabase de produção (T002);
   - validar em produção os cenários 1–5, 20, 21 e 24 (telas de trajetos) do [quickstart.md](./quickstart.md) e registrar o resultado nesta tarefa
+  - **Resultado (2026-09-30)**: migração `20260930164900_trajetos.sql` aplicada pelo usuário com
+    `db push` no projeto vinculado. Local (T024): lint, typecheck, 80/80 unitários e 74/74 e2e
+    (11 falhas de rede/suspensão na primeira execução paralela, todas aprovadas ao repetir com 2
+    workers). Commit `a76284e` publicado em `https://carona-ja-theta.vercel.app`.
+    `trajetos.spec.ts` + `layout.spec.ts` com `E2E_BASE_URL` de produção: 29/30 em paralelo; a
+    falha (mensagem de duplicado não apareceu em 5 s, no mobile) passou 4/4 ao repetir em série
+    (mobile e desktop). Cobre os cenários 1–5 (navegação, cadastro, validação, duplicado, sentido
+    oposto, lista), 20 e 21 (editar, arquivar/filtro, reativar com e sem conflito, excluir, 404) e
+    24 (sem rolagem horizontal em 360/1280px).
 
 **Checkpoint da Fatia A**: gestão de trajetos publicada e utilizável sozinha.
 
