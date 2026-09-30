@@ -1,5 +1,12 @@
 import { defineConfig, devices } from '@playwright/test'
 
+// Lê E2E_EMAIL/E2E_SENHA (e demais variáveis) do .env.local, se existir.
+try {
+  process.loadEnvFile('.env.local')
+} catch {
+  // Sem .env.local: usa apenas as variáveis do ambiente.
+}
+
 // Quando E2E_BASE_URL está definida (ex.: URL de produção), os testes rodam contra ela
 // e nenhum servidor local é iniciado.
 const baseURL = process.env.E2E_BASE_URL ?? 'http://localhost:3000'

@@ -16,7 +16,7 @@ export async function createClient() {
           cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options))
         } catch {
           // Chamado a partir de um Server Component, onde não é possível gravar cookies.
-          // Pode ser ignorado: o middleware renova a sessão a cada requisição.
+          // Pode ser ignorado: o proxy.ts renova a sessão a cada requisição.
         }
       },
     },

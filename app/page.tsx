@@ -1,16 +1,13 @@
-import { checkSupabaseHealth } from '@/lib/supabase/health'
+import { redirect } from 'next/navigation'
 
-// Página provisória da Fatia A; será substituída por um redirecionamento na Fatia B.
-export const dynamic = 'force-dynamic'
+import { createClient } from '@/lib/supabase/server'
 
+// "/" não tem conteúdo próprio: leva para a tela certa conforme a sessão.
 export default async function Home() {
-  const bancoOk = await checkSupabaseHealth()
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
 
-  return (
-    <main className="flex flex-1 flex-col items-center justify-center gap-2 p-4 text-center">
-      <h1 className="text-3xl font-semibold">Caronas Já</h1>
-      <p className="text-muted-foreground">Em construção: login em breve</p>
-      <p>{`Conexão com o banco: ${bancoOk ? 'OK' : 'indisponível'}`}</p>
-    </main>
-  )
+  redirect(user ? '/inicio' : '/entrar')
 }

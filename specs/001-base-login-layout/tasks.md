@@ -125,7 +125,7 @@ cenários 1–6, 10 e 11).
 
 ### Testes da Fatia B (escrever primeiro e garantir que FALHEM)
 
-- [ ] T021 [P] [US1] Criar `tests/unit/redirect.test.ts` para `sanitizeNext(valor: string | null | undefined): string`. Casos:
+- [X] T021 [P] [US1] Criar `tests/unit/redirect.test.ts` para `sanitizeNext(valor: string | null | undefined): string`. Casos:
   - `'/inicio'` → `'/inicio'`;
   - `'/inicio?x=1'` → `'/inicio?x=1'`;
   - `null`/`undefined`/`''` → `'/inicio'`;
@@ -133,12 +133,12 @@ cenários 1–6, 10 e 11).
   - `'https://evil.com'` → `'/inicio'`;
   - `'/a\\b'` → `'/inicio'`;
   - `'inicio'` (sem barra) → `'/inicio'`
-- [ ] T022 [P] [US1] Criar `tests/unit/auth-errors.test.ts` para `mapAuthError(error)`:
+- [X] T022 [P] [US1] Criar `tests/unit/auth-errors.test.ts` para `mapAuthError(error)`:
   - credencial inválida → "E-mail ou senha inválidos.";
   - status 429 → "Muitas tentativas. Aguarde alguns minutos e tente novamente.";
   - erro de rede (`TypeError`/`fetch failed`) → "Não foi possível conectar. Tente novamente.";
   - qualquer outro → a mensagem genérica de credencial (nunca revelar se o e-mail existe, FR-007)
-- [ ] T023 [P] [US1] Criar `tests/e2e/auth.spec.ts` (usa `E2E_EMAIL`/`E2E_SENHA` de uma conta de **teste**; `test.skip` se ausentes). Cenários:
+- [X] T023 [P] [US1] Criar `tests/e2e/auth.spec.ts` (usa `E2E_EMAIL`/`E2E_SENHA` de uma conta de **teste**; `test.skip` se ausentes). Cenários:
   - sem sessão, `/inicio` → URL `/entrar?proximo=%2Finicio`;
   - senha errada → texto "E-mail ou senha inválidos." e continua em `/entrar`;
   - login válido → `/inicio` com texto "Olá,";
@@ -149,7 +149,7 @@ cenários 1–6, 10 e 11).
 
 ### Implementação da Fatia B
 
-- [ ] T024 [US1] Criar a migração `supabase/migrations/<timestamp>_perfis.sql` (via `npx supabase migration new perfis`) conforme `data-model.md` Parte 1:
+- [X] T024 [US1] Criar a migração `supabase/migrations/<timestamp>_perfis.sql` (via `npx supabase migration new perfis`) conforme `data-model.md` Parte 1:
   1. função `public.definir_atualizado_em()` (trigger `before update` que faz `new.atualizado_em = now()`);
   2. tabela `public.perfis` com `id uuid primary key references auth.users(id) on delete cascade`, `nome_exibicao text not null` com `check (char_length(trim(nome_exibicao)) between 1 and 60)`, `criado_em timestamptz not null default now()` e `atualizado_em timestamptz not null default now()`;
   3. trigger `perfis_definir_atualizado_em`;
@@ -159,47 +159,47 @@ cenários 1–6, 10 e 11).
   7. `alter table public.perfis enable row level security`;
   8. políticas `select` e `update` `using (id = (select auth.uid()))` (o `update` também com `with check`) para `authenticated`;
   9. nenhuma política de `insert`/`delete`
-- [ ] T025 [P] [US1] Implementar `sanitizeNext` em `lib/auth/redirect.ts`: aceita apenas valores que começam com `/`, não começam com `//` e não contêm `\`; caso contrário, retorna `'/inicio'` (faz T021 passar)
-- [ ] T026 [P] [US1] Implementar `mapAuthError` em `lib/auth/errors.ts` com as mensagens pt-BR da tabela "Mensagens de erro" de `contracts/rotas.md` (faz T022 passar)
-- [ ] T027 [US1] Criar `lib/supabase/middleware.ts` com `updateSession(request)`. Comportamento:
+- [X] T025 [P] [US1] Implementar `sanitizeNext` em `lib/auth/redirect.ts`: aceita apenas valores que começam com `/`, não começam com `//` e não contêm `\`; caso contrário, retorna `'/inicio'` (faz T021 passar)
+- [X] T026 [P] [US1] Implementar `mapAuthError` em `lib/auth/errors.ts` com as mensagens pt-BR da tabela "Mensagens de erro" de `contracts/rotas.md` (faz T022 passar)
+- [X] T027 [US1] Criar `lib/supabase/proxy.ts` (Next 16: o antigo `middleware` agora se chama `proxy`) com `updateSession(request)`. Comportamento:
   - usa `createServerClient` com cookies de request/response e chama `supabase.auth.getUser()`;
   - rotas públicas: `/entrar`, `/esqueci-senha` e `/auth/*`;
   - `/`, `/redefinir-senha` e as demais rotas exigem sessão (`/` redireciona conforme a sessão em T037);
   - sem usuário em rota protegida → redireciona para `/entrar?proximo=<pathname+search codificado>`, acrescentando `&motivo=expirada` se existir algum cookie `sb-*-auth-token`;
   - com usuário em `/entrar` → redireciona para `/inicio`
-- [ ] T028 [US1] Criar `middleware.ts` na raiz chamando `updateSession` com `matcher` que exclui `_next/static`, `_next/image`, `favicon.ico` e arquivos de imagem (depende de T027)
-- [ ] T029 [US1] Adicionar os componentes shadcn necessários às telas de acesso: `npx shadcn@latest add button input label card sonner` (gera arquivos em `components/ui/`) e montar `<Toaster richColors position="top-center" />` em `app/layout.tsx`
-- [ ] T030 [US1] Criar `app/(publico)/layout.tsx`: layout centralizado (card de largura máxima de 400px, padding de 16px no celular) com o nome "Caronas Já" acima do conteúdo
-- [ ] T031 [US1] Criar `app/(publico)/entrar/actions.ts` com a server action `entrar(formData)`:
+- [X] T028 [US1] Criar `proxy.ts` na raiz (export `proxy`; substitui `middleware.ts` no Next 16) chamando `updateSession` com `matcher` que exclui `_next/static`, `_next/image`, `favicon.ico` e arquivos de imagem (depende de T027)
+- [X] T029 [US1] Adicionar os componentes shadcn necessários às telas de acesso: `npx shadcn@latest add button input label card sonner` (gera arquivos em `components/ui/`) e montar `<Toaster richColors position="top-center" />` em `app/layout.tsx`
+- [X] T030 [US1] Criar `app/(publico)/layout.tsx`: layout centralizado (card de largura máxima de 400px, padding de 16px no celular) com o nome "Caronas Já" acima do conteúdo
+- [X] T031 [US1] Criar `app/(publico)/entrar/actions.ts` com a server action `entrar(formData)`:
   - valida e-mail e senha não vazios;
   - chama `supabase.auth.signInWithPassword`;
   - em caso de erro, retorna `{ erro: mapAuthError(error) }`;
   - em caso de sucesso, faz `redirect(sanitizeNext(formData.get('proximo')))`
-- [ ] T032 [US1] Criar `app/(publico)/entrar/page.tsx`:
+- [X] T032 [US1] Criar `app/(publico)/entrar/page.tsx`:
   - formulário com campos "E-mail" (`type=email`, `autocomplete=email`) e "Senha" (`type=password`, `autocomplete=current-password`) e um input oculto `proximo`;
   - botão "Entrar" com estado de carregamento (`useActionState`) e mensagem de erro abaixo do formulário;
   - aviso "Sua sessão expirou, entre novamente" quando `motivo=expirada`;
   - aviso "Este link é inválido ou expirou. Solicite um novo." quando `erro=link-invalido`;
   - link "Esqueci minha senha" → `/esqueci-senha`;
   - **sem** link de cadastro (FR-002, FR-003, FR-007, FR-009)
-- [ ] T033 [P] [US1] Criar `app/(publico)/esqueci-senha/page.tsx` e `actions.ts`:
+- [X] T033 [P] [US1] Criar `app/(publico)/esqueci-senha/page.tsx` e `actions.ts`:
   - formulário de e-mail que chama `supabase.auth.resetPasswordForEmail(email, { redirectTo: `${env.siteUrl}/auth/confirmar?next=/redefinir-senha` })`;
   - **sempre** exibe "Se o e-mail estiver cadastrado, você receberá um link." (exceto o 429, que usa `mapAuthError`);
   - link "Voltar para o login" (FR-006, FR-007)
-- [ ] T034 [P] [US1] Criar `app/auth/confirmar/route.ts` (GET):
+- [X] T034 [P] [US1] Criar `app/auth/confirmar/route.ts` (GET):
   - lê `token_hash`, `type` e `next`;
   - chama `supabase.auth.verifyOtp({ type, token_hash })`;
   - em caso de sucesso, `redirect(sanitizeNext(next))`;
   - em caso de falha ou parâmetro ausente, `redirect('/entrar?erro=link-invalido')`
-- [ ] T035 [US1] Criar `app/(publico)/redefinir-senha/page.tsx` e `actions.ts`:
+- [X] T035 [US1] Criar `app/(publico)/redefinir-senha/page.tsx` e `actions.ts`:
   - campos "Nova senha" e "Confirmar nova senha" (`autocomplete=new-password`);
   - validar `mínimo 8 caracteres` e igualdade ("As senhas não conferem.");
   - chamar `supabase.auth.updateUser({ password })`;
   - em caso de sucesso, `redirect('/inicio?senha=atualizada')`;
   - sem sessão de recuperação → redirecionar para `/entrar?erro=link-invalido`
-- [ ] T036 [P] [US1] Criar `app/sair/route.ts` (POST): chama `supabase.auth.signOut()` e faz `NextResponse.redirect(new URL('/entrar', request.url), 303)` (FR-005)
-- [ ] T037 [US1] Substituir a página provisória de `app/page.tsx` por um redirecionamento: com sessão (`getUser()`) → `/inicio`, sem sessão → `/entrar`; remover `lib/supabase/health.ts` e atualizar `tests/e2e/publicacao.spec.ts` para verificar que `/` leva a `/entrar` e que a página exibe o botão "Entrar"
-- [ ] T038 [US1] Criar `app/(app)/layout.tsx` (Server Component) e `app/(app)/inicio/page.tsx`:
+- [X] T036 [P] [US1] Criar `app/sair/route.ts` (POST): chama `supabase.auth.signOut()` e faz `NextResponse.redirect(new URL('/entrar', request.url), 303)` (FR-005)
+- [X] T037 [US1] Substituir a página provisória de `app/page.tsx` por um redirecionamento: com sessão (`getUser()`) → `/inicio`, sem sessão → `/entrar`; remover `lib/supabase/health.ts` e atualizar `tests/e2e/publicacao.spec.ts` para verificar que `/` leva a `/entrar` e que a página exibe o botão "Entrar"
+- [X] T038 [US1] Criar `app/(app)/layout.tsx` (Server Component) e `app/(app)/inicio/page.tsx`:
   - o layout chama `getUser()` e faz `redirect('/entrar')` se não houver usuário (defesa em profundidade além do middleware);
   - o layout busca `nome_exibicao` em `perfis` e renderiza um cabeçalho mínimo provisório com "Caronas Já", nome, e-mail e um `<form action="/sair" method="post">` com o botão "Sair" (será substituído pelo AppShell na Fatia C);
   - `inicio/page.tsx` exibe "Olá, {nome_exibicao}";
