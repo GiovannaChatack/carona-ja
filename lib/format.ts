@@ -36,6 +36,14 @@ export function formatCurrency(centavos: number) {
   return moeda.format(centavos / 100)
 }
 
+// Telefone gravado só com dígitos: 11 → "(DD) 9XXXX-XXXX"; 10 → "(DD) XXXX-XXXX".
+// Qualquer outra entrada volta sem alteração, para a exibição nunca quebrar.
+export function formatPhone(digitos: string) {
+  const partes = /^(\d{2})(\d{5})(\d{4})$/.exec(digitos) ?? /^(\d{2})(\d{4})(\d{4})$/.exec(digitos)
+  if (!partes) return digitos
+  return `(${partes[1]}) ${partes[2]}-${partes[3]}`
+}
+
 export function formatDate(valor: Instante) {
   return data.format(paraDate(valor))
 }

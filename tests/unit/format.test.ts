@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest'
 
-import { formatCurrency, formatDate, formatDateTime, formatMonth, formatTime } from '@/lib/format'
+import {
+  formatCurrency,
+  formatDate,
+  formatDateTime,
+  formatMonth,
+  formatPhone,
+  formatTime,
+} from '@/lib/format'
 
 // O Intl usa espaço não separável entre "R$" e o número; normaliza para comparar.
 function normalizarEspacos(texto: string) {
@@ -16,6 +23,17 @@ describe('formatCurrency', () => {
 
   it('rejeita valores que não são centavos inteiros', () => {
     expect(() => formatCurrency(1.5)).toThrow('Valor em centavos deve ser inteiro')
+  })
+})
+
+describe('formatPhone', () => {
+  it('formata celular e fixo com DDD', () => {
+    expect(formatPhone('11912345678')).toBe('(11) 91234-5678')
+    expect(formatPhone('1131234567')).toBe('(11) 3123-4567')
+  })
+
+  it('devolve sem alteração a entrada fora do formato', () => {
+    expect(formatPhone('123')).toBe('123')
   })
 })
 

@@ -85,11 +85,17 @@ test('rota inexistente mostra a página 404 em pt-BR', async ({ page }) => {
   )
 })
 
-test('/inicio mostra o estado vazio sem links para telas inexistentes', async ({ page }) => {
+test('/inicio convida a cadastrar passageiros, sem links para telas inexistentes', async ({
+  page,
+}) => {
   await entrar(page)
 
   const conteudo = page.getByRole('main')
   await expect(conteudo.getByText('Tudo pronto por aqui')).toBeVisible()
-  await expect(conteudo.getByRole('link')).toHaveCount(0)
+  // Único link: passageiros. Viagens e pagamentos ainda não existem.
+  const links = conteudo.getByRole('link')
+  await expect(links).toHaveCount(1)
+  await expect(links).toHaveText('Cadastrar passageiros')
+  await expect(links).toHaveAttribute('href', '/passageiros')
   await expect(conteudo.getByRole('button')).toHaveCount(0)
 })
