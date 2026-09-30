@@ -66,13 +66,13 @@ npx supabase db push
 
 Detalhes em [`contracts/ambiente.md`](./specs/001-base-login-layout/contracts/ambiente.md).
 
-| Local no painel                                    | Configuração                                                                                                                               |
-| -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| Authentication → Sign In / Providers → Email       | Provedor habilitado; **desligar** "Allow new users to sign up"                                                                             |
-| Authentication → URL Configuration → Site URL      | URL de produção (a mesma de `NEXT_PUBLIC_SITE_URL` na Vercel)                                                                              |
+| Local no painel                                    | Configuração                                                                                                                                 |
+| -------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| Authentication → Sign In / Providers → Email       | Provedor habilitado; **desligar** "Allow new users to sign up"                                                                               |
+| Authentication → URL Configuration → Site URL      | URL de produção (a mesma de `NEXT_PUBLIC_SITE_URL` na Vercel)                                                                                |
 | Authentication → URL Configuration → Redirect URLs | `<url-produção>/**`, `http://localhost:3000/**` e o padrão de previews da Vercel (ex.: `https://carona-ja-*-giovanna-chatack.vercel.app/**`) |
-| Authentication → Email Templates → Reset Password  | Texto em pt-BR, com o link `{{ .SiteURL }}/auth/confirmar?token_hash={{ .TokenHash }}&type=recovery&next=/redefinir-senha`                 |
-| Authentication → Users → Add user                  | Criar a conta do dono (e-mail e senha), marcada como confirmada                                                                            |
+| Authentication → Email Templates → Reset Password  | Texto em pt-BR, com o link `{{ .SiteURL }}/auth/confirmar?token_hash={{ .TokenHash }}&type=recovery&next=/redefinir-senha`                   |
+| Authentication → Users → Add user                  | Criar a conta do dono (e-mail e senha), marcada como confirmada                                                                              |
 
 Não existe cadastro público: a única forma de criar uma conta é pelo painel do Supabase.
 
@@ -124,6 +124,101 @@ E2E_BASE_URL=https://<url-produção> npx playwright test
 
 Os testes de login usam `E2E_EMAIL` e `E2E_SENHA` de uma **conta de teste** separada, nunca a
 senha real do dono.
+
+### Desempenho e acessibilidade (Lighthouse)
+
+Medição em produção (`https://carona-ja-theta.vercel.app`), Lighthouse 12.8, modo mobile com
+throttling simulado de 4G lento (RTT 150 ms, 1,6 Mbps, CPU 4×). Meta: carregamento ≤ 3 s (SC-003)
+e acessibilidade ≥ 90.
+
+| Página    | Data       | LCP (carregamento) | FCP       | Desempenho | Acessibilidade | Resultado |
+| --------- | ---------- | ------------------ | --------- | ---------- | -------------- | --------- |
+| `/entrar` | 30/09/2026 | 2,3–2,6 s          | 0,9–1,1 s | 87–92      | 100            | ✅        |
+| `/inicio` | —          | pendente           | pendente  | pendente   | pendente       | pendente  |
+
+`/entrar` foi medida três vezes (faixa dos resultados). `/inicio` exige login e é medida pelo
+Chrome DevTools → Lighthouse, com a sessão aberta.
+
+```bash
+npx lighthouse https://<url-produção>/entrar --form-factor=mobile --only-categories=performance,accessibility --view
+```
+
+## Padrões para os próximos slices
+
+Os slices 002–006 reutilizam o layout e os componentes definidos no slice 001. A referência
+completa está em [`contracts/ui.md`](./specs/001-base-login-layout/contracts/ui.md) (layout,
+componentes base, padrões visuais e formatadores) e as regras de rotas em
+[`contracts/rotas.md`](./specs/001-base-login-layout/contracts/rotas.md).
+
+### Adicionar um item de navegação
+
+A Sidebar (desktop), a BottomNav (celular) e o título do cabeçalho leem a mesma lista em
+[`components/layout/nav-items.ts`](./components/layout/nav-items.ts). Acrescente o item **somente
+quando a tela já existir**, com um ícone do `lucide-react`:
+
+```ts
+import { House, Users } from 'lucide-react'
+
+export const navItems: NavItem[] = [
+  { rotulo: 'Início', href: '/inicio', icone: House },
+  { rotulo: 'Passageiros', href: '/passageiros', icone: Users },
+]
+```
+
+A BottomNav comporta no máximo 5 itens. O item fica ativo (`aria-current="page"`) na própria rota
+e nas sub-rotas (ex.: `/passageiros/novo`).
+
+### Criar uma página
+
+Crie a pasta em `app/(app)/<recurso>/` com um `page.tsx`. O grupo `(app)` já aplica o `AppShell`
+(cabeçalho, navegação e menu da conta), e o `proxy.ts` exige sessão em toda rota que não esteja
+na lista pública de `lib/supabase/proxy.ts`. Use [`app/(app)/inicio/page.tsx`](<./app/(app)/inicio/page.tsx>)
+como modelo:
+
+- exporte `metadata` com o título no formato `'<Página> · Caronas Já'`;
+- use `obterUsuarioLogado()` (de `lib/auth/sessao.ts`) quando precisar do usuário;
+- componentes base: `EmptyState` para listas vazias, `ResponsiveTable` para listagens,
+  `ConfirmDialog` para ações destrutivas, `toast` (sonner) para confirmações e `lib/format` para
+  moeda e datas;
+- textos da interface em pt-BR; nomes de componentes em inglês.
+
+### Criar uma migração com RLS "somente o dono"
+
+```bash
+npx supabase migration new <nome_da_tabela>
+```
+
+Use [`supabase/migrations/20260930033131_perfis.sql`](./supabase/migrations/20260930033131_perfis.sql)
+como modelo. Toda tabela nova deve:
+
+1. ter uma coluna de dono, `usuario_id uuid not null default auth.uid() references auth.users (id) on delete cascade`
+   (em `perfis`, o próprio `id` faz esse papel);
+2. reutilizar o trigger `public.definir_atualizado_em()` para a coluna `atualizado_em`;
+3. habilitar a RLS (`alter table ... enable row level security`);
+4. ter políticas `to authenticated` que comparem o dono com `(select auth.uid())` em `using` e,
+   nas escritas, em `with check`:
+
+```sql
+create policy "<tabela>: dono lê os próprios registros"
+  on public.<tabela> for select to authenticated
+  using (usuario_id = (select auth.uid()));
+
+create policy "<tabela>: dono insere os próprios registros"
+  on public.<tabela> for insert to authenticated
+  with check (usuario_id = (select auth.uid()));
+
+create policy "<tabela>: dono atualiza os próprios registros"
+  on public.<tabela> for update to authenticated
+  using (usuario_id = (select auth.uid()))
+  with check (usuario_id = (select auth.uid()));
+
+create policy "<tabela>: dono exclui os próprios registros"
+  on public.<tabela> for delete to authenticated
+  using (usuario_id = (select auth.uid()));
+```
+
+Aplique com `npx supabase db push` e confirme, com a chave anon, que outro usuário não vê as
+linhas (como no cenário 11 do [quickstart](./specs/001-base-login-layout/quickstart.md)).
 
 ## Observação: pausa do plano gratuito do Supabase
 
