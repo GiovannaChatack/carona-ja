@@ -47,6 +47,7 @@ export default async function TrajetoPage({ params, searchParams }: Props) {
   const itens: [string, React.ReactNode][] = [
     ['Origem', trajeto.origem],
     ['Destino', trajeto.destino],
+    ['Viagens registradas', trajeto.quantidade_viagens],
     [
       'Situação',
       trajeto.arquivado_em ? (

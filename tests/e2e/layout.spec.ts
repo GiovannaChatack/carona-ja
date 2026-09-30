@@ -85,18 +85,16 @@ test('rota inexistente mostra a página 404 em pt-BR', async ({ page }) => {
   )
 })
 
-test('/inicio convida a cadastrar trajetos e passageiros, sem links para telas inexistentes', async ({
-  page,
-}) => {
+test('/inicio convida a registrar viagens, sem links para telas inexistentes', async ({ page }) => {
   await entrar(page)
 
   const conteudo = page.getByRole('main')
   await expect(conteudo.getByText('Tudo pronto por aqui')).toBeVisible()
-  // Só trajetos e passageiros. O registro de viagens e os pagamentos ainda não existem.
+  // Só viagens e passageiros. Os pagamentos ainda não existem.
   const links = conteudo.getByRole('link')
   await expect(links).toHaveCount(2)
-  await expect(links.nth(0)).toHaveText('Cadastrar trajetos')
-  await expect(links.nth(0)).toHaveAttribute('href', '/viagens/trajetos')
+  await expect(links.nth(0)).toHaveText('Registrar viagem')
+  await expect(links.nth(0)).toHaveAttribute('href', '/viagens/nova')
   await expect(links.nth(1)).toHaveText('Passageiros')
   await expect(links.nth(1)).toHaveAttribute('href', '/passageiros')
   await expect(conteudo.getByRole('button')).toHaveCount(0)

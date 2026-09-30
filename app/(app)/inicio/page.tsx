@@ -16,16 +16,15 @@ export default async function InicioPage() {
   return (
     <>
       <h1 className="text-2xl font-semibold">{`Olá, ${nomeExibicao}`}</h1>
-      {/* Passageiros e trajetos têm tela; o registro de viagens chega na fatia B e pagamentos
-          ainda não existem (sem links para eles). */}
+      {/* Passageiros, trajetos e viagens têm tela; pagamentos ainda não existem (sem links). */}
       <EmptyState
         icone={Car}
         titulo="Tudo pronto por aqui"
-        descricao="Comece cadastrando os seus passageiros e os trajetos que você faz. Em seguida você poderá registrar viagens."
+        descricao="Registre cada viagem com os passageiros que foram e quanto cada um pagou. Os passageiros e os trajetos ficam guardados para as próximas."
         acao={
           <div className="flex flex-col gap-3 sm:flex-row">
             <Button asChild>
-              <Link href="/viagens/trajetos">Cadastrar trajetos</Link>
+              <Link href="/viagens/nova">Registrar viagem</Link>
             </Button>
             <Button asChild variant="outline">
               <Link href="/passageiros">Passageiros</Link>

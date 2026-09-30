@@ -57,7 +57,8 @@ test.describe('US1 – cadastro e lista de trajetos', () => {
     await expect(page).toHaveURL(/\/viagens$/)
     await expect(page.getByRole('heading', { name: 'Viagens', level: 1 })).toBeVisible()
 
-    await page.getByRole('main').getByRole('link', { name: 'Trajetos' }).click()
+    // O cabeçalho e o estado vazio de /viagens podem ter o link "Trajetos".
+    await page.getByRole('main').getByRole('link', { name: 'Trajetos' }).first().click()
     await expect(page).toHaveURL(/\/viagens\/trajetos$/)
     await expect(page.getByRole('heading', { name: 'Trajetos', level: 1 })).toBeVisible()
 

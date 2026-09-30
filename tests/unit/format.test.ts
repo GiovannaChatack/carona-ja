@@ -7,6 +7,7 @@ import {
   formatMonth,
   formatPhone,
   formatTime,
+  paraCampoDataHora,
 } from '@/lib/format'
 
 // O Intl usa espaço não separável entre "R$" e o número; normaliza para comparar.
@@ -59,5 +60,20 @@ describe('datas no fuso America/Sao_Paulo', () => {
 
   it('usa a data local de São Paulo na virada do dia', () => {
     expect(formatDate('2026-10-01T02:00:00Z')).toBe('30/09/2026')
+  })
+})
+
+describe('paraCampoDataHora', () => {
+  it('converte o instante para o campo datetime-local de São Paulo', () => {
+    expect(paraCampoDataHora('2026-09-30T10:40:00Z')).toBe('2026-09-30T07:40')
+    expect(paraCampoDataHora(new Date('2026-09-30T10:40:00Z'))).toBe('2026-09-30T07:40')
+  })
+
+  it('usa o dia local na virada do ano', () => {
+    expect(paraCampoDataHora('2026-01-01T02:59:00Z')).toBe('2025-12-31T23:59')
+  })
+
+  it('meia-noite local sai como 00, não 24', () => {
+    expect(paraCampoDataHora('2026-09-30T03:00:00Z')).toBe('2026-09-30T00:00')
   })
 })

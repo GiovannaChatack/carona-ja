@@ -25,6 +25,17 @@ const mes = new Intl.DateTimeFormat('pt-BR', {
   year: 'numeric',
 })
 
+// en-CA dá as partes numéricas; h23 evita "24" à meia-noite.
+const campoDataHora = new Intl.DateTimeFormat('en-CA', {
+  timeZone: TIME_ZONE,
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+  hour: '2-digit',
+  minute: '2-digit',
+  hourCycle: 'h23',
+})
+
 type Instante = Date | string
 
 function paraDate(valor: Instante) {
@@ -58,4 +69,12 @@ export function formatDateTime(valor: Instante) {
 
 export function formatMonth(valor: Instante) {
   return mes.format(paraDate(valor))
+}
+
+// Instante → "AAAA-MM-DDTHH:mm" em São Paulo, o formato do <input type="datetime-local">.
+export function paraCampoDataHora(valor: Instante) {
+  const partes = Object.fromEntries(
+    campoDataHora.formatToParts(paraDate(valor)).map(({ type, value }) => [type, value]),
+  )
+  return `${partes.year}-${partes.month}-${partes.day}T${partes.hour}:${partes.minute}`
 }

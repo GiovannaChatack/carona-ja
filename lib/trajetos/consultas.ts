@@ -32,12 +32,24 @@ export async function listarTrajetos(situacao: SituacaoTrajeto): Promise<Trajeto
 }
 
 // Compartilhada entre a página e o generateMetadata (uma consulta por requisição).
-export const obterTrajeto = cache(async (id: string): Promise<Trajeto | null> => {
-  if (!ehUuid(id)) return null
+// quantidade_viagens conta só as viagens ativas do trajeto.
+export const obterTrajeto = cache(
+  async (id: string): Promise<(Trajeto & { quantidade_viagens: number }) | null> => {
+    if (!ehUuid(id)) return null
 
-  const supabase = await createClient()
-  // Trajeto de outra conta não é visível pela RLS: volta null.
-  const { data, error } = await supabase.from('trajetos').select(COLUNAS).eq('id', id).maybeSingle()
-  if (error) throw new Error(`Falha ao obter trajeto: ${error.message}`)
-  return data as Trajeto | null
-})
+    const supabase = await createClient()
+    // Trajeto de outra conta não é visível pela RLS: volta null.
+    const [trajeto, viagens] = await Promise.all([
+      supabase.from('trajetos').select(COLUNAS).eq('id', id).maybeSingle(),
+      supabase
+        .from('viagens')
+        .select('id', { count: 'exact', head: true })
+        .eq('trajeto_id', id)
+        .is('arquivada_em', null),
+    ])
+    const erro = trajeto.error ?? viagens.error
+    if (erro) throw new Error(`Falha ao obter trajeto: ${erro.message}`)
+    if (!trajeto.data) return null
+    return { ...(trajeto.data as Trajeto), quantidade_viagens: viagens.count ?? 0 }
+  },
+)

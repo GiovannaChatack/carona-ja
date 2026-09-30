@@ -243,7 +243,7 @@ valores, com total automático), vê a lista das mais recentes e abre os detalhe
 **Objetivo**: tabelas de viagens e participações, view do total, função de registro e regras
 puras.
 
-- [ ] T026 Criar a migração com `npx supabase migration new viagens` e escrever `supabase/migrations/<timestamp>_viagens.sql` conforme [data-model.md](./data-model.md) e [research.md](./research.md) §2–§9:
+- [X] T026 Criar a migração com `npx supabase migration new viagens` e escrever `supabase/migrations/<timestamp>_viagens.sql` conforme [data-model.md](./data-model.md) e [research.md](./research.md) §2–§9:
   - `alter table public.passageiros add constraint passageiros_id_motorista_unico unique (id, motorista_id)`;
   - tabela `public.viagens`:
     - `id uuid primary key default gen_random_uuid()`;
@@ -279,14 +279,14 @@ puras.
     - sem `p_confirmar_duplicada`, uma viagem ativa com o mesmo `trajeto_id` e `sentido` e `(realizada_em at time zone 'America/Sao_Paulo')::date` igual → `raise exception using errcode = 'CJ001', message = 'viagem_duplicada', detail = to_char(<data local>, 'DD/MM/YYYY')`;
     - `insert` da viagem (`returning id`) e das participações;
   - `revoke execute on function public.registrar_viagem(uuid, text, timestamp, jsonb, boolean) from public, anon;` e `grant execute ... to authenticated;`
-- [ ] T027 **(manual)** Aplicar a migração com `npx supabase db push` e conferir no painel as duas tabelas com RLS e 4 políticas cada, a view `viagens_resumo` e a função `registrar_viagem`
-- [ ] T028 [P] Criar `lib/viagens/tipos.ts` com `Sentido`, `ViagemResumo`, `Participacao` ([data-model.md](./data-model.md) → "Tipos TypeScript"), `SituacaoViagem = 'ativas' | 'arquivadas'`, `CamposViagem`, `EstadoFormularioViagem` e `EstadoAcaoViagem` ([contracts/acoes.md](./contracts/acoes.md)), e `PassageiroOpcao = { id; nome; valor_padrao_centavos; arquivado_em }`
-- [ ] T029 [P] Escrever `tests/unit/viagens-validacao.test.ts` (devem falhar antes de T030) com **todos** os exemplos obrigatórios de `percurso`, `validarDataHoraLocal`, `validarViagem` e `somarCentavos` de [contracts/acoes.md](./contracts/acoes.md), e também:
+- [X] T027 **(manual)** Aplicar a migração com `npx supabase db push` e conferir no painel as duas tabelas com RLS e 4 políticas cada, a view `viagens_resumo` e a função `registrar_viagem`
+- [X] T028 [P] Criar `lib/viagens/tipos.ts` com `Sentido`, `ViagemResumo`, `Participacao` ([data-model.md](./data-model.md) → "Tipos TypeScript"), `SituacaoViagem = 'ativas' | 'arquivadas'`, `CamposViagem`, `EstadoFormularioViagem` e `EstadoAcaoViagem` ([contracts/acoes.md](./contracts/acoes.md)), e `PassageiroOpcao = { id; nome; valor_padrao_centavos; arquivado_em }`
+- [X] T029 [P] Escrever `tests/unit/viagens-validacao.test.ts` (devem falhar antes de T030) com **todos** os exemplos obrigatórios de `percurso`, `validarDataHoraLocal`, `validarViagem` e `somarCentavos` de [contracts/acoes.md](./contracts/acoes.md), e também:
   - `validarDataHoraLocal` aceita exatamente agora + 24h e aceita segundos (`"2026-09-30T07:40:00"` → `"2026-09-30T07:40"`); rejeita `"2026-02-30T10:00"` (data inexistente);
   - `validarViagem` com `trajeto` que não é UUID → `errosCampo.trajeto` "Escolha um trajeto.";
   - um caso válido completo que devolve `participacoes` com `valor_centavos` inteiros e `data_hora_local` normalizada;
   - acrescentar a `tests/unit/format.test.ts`: `paraCampoDataHora('2026-09-30T10:40:00Z')` → `"2026-09-30T07:40"` e `paraCampoDataHora('2026-01-01T02:59:00Z')` → `"2025-12-31T23:59"`
-- [ ] T030 Implementar `lib/viagens/validacao.ts` (funções puras) até T029 passar:
+- [X] T030 Implementar `lib/viagens/validacao.ts` (funções puras) até T029 passar:
   - `percurso(t, sentido)`: `ida` → `rotuloTrajeto(t)`; `volta` → `` `${t.destino} → ${t.origem}` ``;
   - `validarDataHoraLocal(entrada, agoraLocal)`: aceita `^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?$` e descarta os segundos. Confere que a data existe (`Date.UTC` com as partes e comparação de volta). Limite: `agoraLocal` + 24h, calculado com `Date.UTC` e formatado de volta como `AAAA-MM-DDTHH:mm`, com comparação de strings. Mensagens: vazio → "Informe a data e a hora."; formato ou data inválida → "Data e hora inválidas."; acima do limite → "A data e a hora não podem passar de 1 dia no futuro.";
   - `validarViagem(formData, agoraLocal)`:
@@ -296,8 +296,8 @@ puras.
     - `formData.getAll('passageiros')` sem repetições e só UUIDs; nenhum → "Marque ao menos um passageiro.";
     - para cada passageiro, `parseValorEmCentavos(valor_<id>, 'Informe o valor.')`, com erro em `errosValor[id]`;
   - `somarCentavos(valores)`: soma de inteiros
-- [ ] T031 Implementar `paraCampoDataHora(valor)` em `lib/format.ts` até T029 passar: `Intl.DateTimeFormat('en-CA', { timeZone: TIME_ZONE, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })` com `formatToParts`, montando `AAAA-MM-DDTHH:mm`
-- [ ] T032 [P] Ampliar `tests/e2e/helpers/passageiros.ts`:
+- [X] T031 Implementar `paraCampoDataHora(valor)` em `lib/format.ts` até T029 passar: `Intl.DateTimeFormat('en-CA', { timeZone: TIME_ZONE, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })` com `formatToParts`, montando `AAAA-MM-DDTHH:mm`
+- [X] T032 [P] Ampliar `tests/e2e/helpers/passageiros.ts`:
   - `limparDadosDeTeste()` passa a excluir **primeiro** as `viagens` cujo `trajeto_id` pertence aos trajetos de teste do worker (a cascata remove as participações), e depois trajetos e passageiros;
   - novo helper `prepararCenario({ passageiros: { base, valorCentavos }[], trajeto: { origemBase, destino } })`, que cria pela API (cliente anon com login da conta de teste, sob a RLS) os passageiros (telefone `11912345678`) e o trajeto com nomes de `nomeDeTeste` e devolve os ids e nomes;
   - novo helper `registrarViagemPelaApi({ trajetoId, sentido, dataHoraLocal, participacoes })`, que chama `rpc('registrar_viagem', { ..., p_confirmar_duplicada: true })`
@@ -314,7 +314,7 @@ conferir a lista (quickstart, cenários 6–11).
 
 ### Testes da História 2
 
-- [ ] T033 [P] [US2] Criar `tests/e2e/viagens.spec.ts` (bloco `US2 – registrar viagem`, pulado sem credenciais, `afterAll(limparDadosDeTeste)`, cenário com `prepararCenario` de 2 passageiros, R$ 12,00 e R$ 10,00, e 1 trajeto):
+- [X] T033 [P] [US2] Criar `tests/e2e/viagens.spec.ts` (bloco `US2 – registrar viagem`, pulado sem credenciais, `afterAll(limparDadosDeTeste)`, cenário com `prepararCenario` de 2 passageiros, R$ 12,00 e R$ 10,00, e 1 trajeto):
   - em `/inicio`, "Registrar viagem" leva a `/viagens/nova`;
   - o trajeto de teste é escolhido no `<select>` "Trajeto"; escolher "Ida" mostra "Percurso: <origem> → <destino>" e "Volta" mostra o inverso;
   - marcar os dois passageiros mostra os valores `12,00` e `10,00` e "Total: R$ 22,00 · 2 passageiros" (normalizar o espaço não separável); mudar um valor para `8,5` atualiza o total para R$ 18,50;
@@ -326,16 +326,16 @@ conferir a lista (quickstart, cenários 6–11).
 
 ### Implementação da História 2
 
-- [ ] T034 [US2] Criar `lib/viagens/consultas.ts` (só servidor) com `obterDadosFormularioViagem()` (modo nova viagem):
+- [X] T034 [US2] Criar `lib/viagens/consultas.ts` (só servidor) com `obterDadosFormularioViagem()` (modo nova viagem):
   - trajetos ativos, ordenados como em `listarTrajetos`;
   - passageiros ativos (`id, nome, valor_padrao_centavos, arquivado_em`) em ordem alfabética pt-BR;
   - `trajetoSugeridoId`: o `trajeto_id` da viagem mais recente (`order('criado_em', { ascending: false }).limit(1)`), se estiver entre os ativos; senão, o único trajeto ativo, se houver só um; senão, `null`
-- [ ] T035 [US2] Criar `app/(app)/viagens/actions.ts` (`'use server'`) com `registrarViagem(estado, formData)` conforme [contracts/acoes.md](./contracts/acoes.md):
+- [X] T035 [US2] Criar `app/(app)/viagens/actions.ts` (`'use server'`) com `registrarViagem(estado, formData)` conforme [contracts/acoes.md](./contracts/acoes.md):
   - `agoraLocal = paraCampoDataHora(new Date())`; `validarViagem(formData, agoraLocal)`; se falhar → `{ errosCampo, errosValor, valores }`, com os `valores` de cada campo, a lista de passageiros marcados e `valoresPorPassageiro`;
   - `rpc('registrar_viagem', { p_trajeto_id, p_sentido, p_data_hora_local, p_participacoes, p_confirmar_duplicada: formData.get('confirmar_duplicada') === '1' })`;
   - traduzir `error.code` pela tabela de [contracts/acoes.md](./contracts/acoes.md): `CJ001` → `duplicada` "Já existe uma viagem de <ida|volta> neste trajeto em <error.details>."; `CJ002`–`CJ005` → campo e mensagem da tabela; outros → "Não foi possível salvar. Tente novamente."; sempre com `valores`;
   - sucesso: `revalidatePath('/viagens')` e `redirect('/viagens?aviso=registrada')` fora do `try/catch`
-- [ ] T036 [US2] Criar `app/(app)/viagens/formulario-viagem.tsx` (cliente) conforme [contracts/rotas.md](./contracts/rotas.md) e research §11:
+- [X] T036 [US2] Criar `app/(app)/viagens/formulario-viagem.tsx` (cliente) conforme [contracts/rotas.md](./contracts/rotas.md) e research §11:
   - **props**: `acao`, `trajetos: Trajeto[]`, `passageiros: PassageiroOpcao[]`, `inicial?: { trajeto?; sentido?; data_hora; participacoes?: Record<string, string> }`, `maxDataHora`, `textoEnviar`, `textoDuplicada` ("Registrar") e `hrefCancelar`;
   - **estado controlado** (`useState`), inicializado com `estado.valores ?? inicial`, e reinicializado quando a action devolve novos `valores`: trajeto, sentido, passageiros marcados e o texto do valor de cada um;
   - **Trajeto**: `<select name="trajeto">` com a opção vazia "Escolha o trajeto" e `rotuloTrajeto`, mais o sufixo " (arquivado)" quando `arquivado_em`;
@@ -345,17 +345,17 @@ conferir a lista (quickstart, cenários 6–11).
   - **Total**: barra `sticky bottom-0` (no celular, acima da `BottomNav`, com fundo e borda) com "Total: <formatCurrency(somarCentavos(...))> · N passageiro(s)", usando `parseValorEmCentavos` e contando valor inválido como 0; botões "Cancelar" e enviar ("Salvando..." enquanto pendente) na mesma barra;
   - **Duplicidade**: quando `estado.duplicada` chega, abre `ConfirmDialog` ("Registrar mesmo assim?", descrição = `estado.duplicada`, botão `textoDuplicada`). Confirmar grava `1` em um `input type="hidden" name="confirmar_duplicada"` e chama `form.requestSubmit()`. Cancelar fecha o diálogo e mantém os dados;
   - **Erros**: por campo (`aria-invalid`/`aria-describedby`) e geral em `role="alert"`
-- [ ] T037 [US2] Criar `app/(app)/viagens/nova/page.tsx`:
+- [X] T037 [US2] Criar `app/(app)/viagens/nova/page.tsx`:
   - `metadata.title = 'Nova viagem · Caronas Já'` e `h1` "Nova viagem"; `obterDadosFormularioViagem()`;
   - sem trajeto ativo: `EmptyState` "Cadastre um trajeto primeiro" com ação "Novo trajeto" (`/viagens/trajetos/novo`); sem passageiro ativo: `EmptyState` "Cadastre um passageiro primeiro" com ação "Novo passageiro" (FR-016);
   - senão, `FormularioViagem` com `acao={registrarViagem}`, `inicial={{ trajeto: trajetoSugeridoId ?? undefined, data_hora: paraCampoDataHora(new Date()) }}`, `maxDataHora` = agora + 1 dia em `paraCampoDataHora`, `textoEnviar="Registrar viagem"` e `hrefCancelar="/viagens"`
-- [ ] T038 [US2] Substituir a página provisória `app/(app)/viagens/page.tsx` (T015) pela lista real:
+- [X] T038 [US2] Substituir a página provisória `app/(app)/viagens/page.tsx` (T015) pela lista real:
   - acrescentar `listarViagens(situacao, limite)` a `lib/viagens/consultas.ts`: `from('viagens_resumo')`, filtro por `arquivada_em`, `order('realizada_em', { ascending: false }).order('criado_em', { ascending: false })`, `limit(limite + 1)`; devolve `{ viagens, temMais }`;
   - a página chama `listarViagens('ativas', 20)`; o cabeçalho tem o `h1` "Viagens", "Nova viagem" (primário) e "Trajetos" (`outline`);
   - criar `app/(app)/viagens/lista-viagens.tsx` com `ResponsiveTable` e as colunas Data (`formatDateTime`), Percurso (`percurso`), Sentido (`Badge` "Ida"/"Volta"), Passageiros e Total (`formatCurrency`), todas `essencial`;
   - vazio: `EmptyState` ícone `Car`, "Nenhuma viagem registrada", a descrição de [contracts/rotas.md](./contracts/rotas.md) e as ações "Nova viagem" e "Trajetos";
   - `<AvisoUrl mensagens={{ registrada: 'Viagem registrada' }} />`
-- [ ] T039 [P] [US2] Atualizar `app/(app)/inicio/page.tsx`: ação primária "Registrar viagem" (`/viagens/nova`) e secundária "Passageiros"; a descrição cita registrar viagens (research §14). Ajustar `tests/e2e/layout.spec.ts` se necessário
+- [X] T039 [P] [US2] Atualizar `app/(app)/inicio/page.tsx`: ação primária "Registrar viagem" (`/viagens/nova`) e secundária "Passageiros"; a descrição cita registrar viagens (research §14). Ajustar `tests/e2e/layout.spec.ts` se necessário
 
 **Checkpoint**: registrar uma viagem funciona de ponta a ponta, com o total correto.
 
@@ -369,7 +369,7 @@ delas (quickstart, cenários 12, 13, 16, 19, 22 e 23).
 
 ### Testes da História 3
 
-- [ ] T040 [P] [US3] Acrescentar a `tests/e2e/viagens.spec.ts` o bloco `US3 – lista e detalhes` (viagens criadas com `registrarViagemPelaApi`):
+- [X] T040 [P] [US3] Acrescentar a `tests/e2e/viagens.spec.ts` o bloco `US3 – lista e detalhes` (viagens criadas com `registrarViagemPelaApi`):
   - três viagens em datas diferentes aparecem da mais recente para a mais antiga;
   - abrir uma leva a `/viagens/<uuid>` com o `h1` "Ida: <origem> → <destino>", a data `DD/MM/AAAA HH:mm`, cada passageiro com o seu valor e o total;
   - alterar o valor padrão de um passageiro (pela API) não muda o valor dele nos detalhes (SC-004);
@@ -380,11 +380,11 @@ delas (quickstart, cenários 12, 13, 16, 19, 22 e 23).
 
 ### Implementação da História 3
 
-- [ ] T041 [US3] Acrescentar `obterViagem(id)` a `lib/viagens/consultas.ts`, com `cache()`:
+- [X] T041 [US3] Acrescentar `obterViagem(id)` a `lib/viagens/consultas.ts`, com `cache()`:
   - `!ehUuid` → `null`;
   - `viagens_resumo` `.eq('id', id).maybeSingle()`;
   - participações com `from('viagem_passageiros').select('id, passageiro_id, valor_centavos, passageiro:passageiros(nome, arquivado_em, valor_padrao_centavos)').eq('viagem_id', id)`, ordenadas por nome (pt-BR)
-- [ ] T042 [US3] Criar `app/(app)/viagens/[id]/page.tsx` conforme [contracts/rotas.md](./contracts/rotas.md):
+- [X] T042 [US3] Criar `app/(app)/viagens/[id]/page.tsx` conforme [contracts/rotas.md](./contracts/rotas.md):
   - `generateMetadata` "Viagem de DD/MM/AAAA · Caronas Já"; `null` → `notFound()`;
   - link "Viagens" (voltar) repassando só `situacao` e `pagina` de `?de=`;
   - `h1` "Ida: …" / "Volta: …" com `percurso`;
@@ -392,12 +392,12 @@ delas (quickstart, cenários 12, 13, 16, 19, 22 e 23).
   - lista de passageiros: nome, `Badge` "Arquivado" e valor à direita;
   - Total em destaque (`formatCurrency(total_centavos)`);
   - `<AvisoUrl mensagens={{ atualizada: 'Viagem atualizada', arquivada: 'Viagem arquivada', reativada: 'Viagem reativada' }} />`
-- [ ] T043 [US3] Em `app/(app)/viagens/page.tsx` e `lista-viagens.tsx`:
+- [X] T043 [US3] Em `app/(app)/viagens/page.tsx` e `lista-viagens.tsx`:
   - a coluna Data vira um `Link` para `/viagens/<id>?de=<querystring atual>`, com o cartão inteiro clicável no celular;
   - ler `?pagina` (inteiro de 1 a 50; inválido → 1) e usar `limite = pagina × 20`;
   - quando `temMais`, mostrar o link "Carregar mais" para a mesma URL com `pagina + 1` (`scroll={false}`, altura ≥ 44px)
-- [ ] T044 [US3] Em `lib/trajetos/consultas.ts`, `obterTrajeto` passa a devolver `quantidade_viagens` (viagens ativas do trajeto, via `select('id', { count: 'exact', head: true })` em `viagens` com `trajeto_id` e `arquivada_em is null`), e `app/(app)/viagens/trajetos/[id]/page.tsx` mostra "Viagens registradas: N"
-- [ ] T045 Rodar `npm run lint`, `npm run typecheck`, `npm run test` e `npm run test:e2e` e corrigir as falhas
+- [X] T044 [US3] Em `lib/trajetos/consultas.ts`, `obterTrajeto` passa a devolver `quantidade_viagens` (viagens ativas do trajeto, via `select('id', { count: 'exact', head: true })` em `viagens` com `trajeto_id` e `arquivada_em is null`), e `app/(app)/viagens/trajetos/[id]/page.tsx` mostra "Viagens registradas: N"
+- [X] T045 Rodar `npm run lint`, `npm run typecheck`, `npm run test` e `npm run test:e2e` e corrigir as falhas
 - [ ] T046 Fechar a Fatia B:
   - commit em pt-BR e push na `main`; aguardar o deploy;
   - **(manual)** confirmar a migração em produção (T027);
