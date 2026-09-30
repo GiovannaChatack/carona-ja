@@ -10,7 +10,7 @@ import {
 
 const ERRO_VALOR = 'Informe um valor entre R$ 0,00 e R$ 9.999,99, com até 2 casas decimais.'
 
-// Cadastra pelo formulário e espera voltar à lista com o toast.
+// Cadastra pelo formulário, confere o toast e termina na lista.
 async function cadastrar(page: Page, nome: string, telefone = '(11) 91234-5678', valor = '12,5') {
   await page.goto('/passageiros/novo')
   await page.getByLabel('Nome').fill(nome)
@@ -18,8 +18,10 @@ async function cadastrar(page: Page, nome: string, telefone = '(11) 91234-5678',
   await page.getByLabel('Valor padrão por trajeto').fill(valor)
   await page.getByRole('button', { name: 'Salvar' }).click()
   await expect(page.getByText('Passageiro cadastrado')).toBeVisible()
-  // O AvisoUrl remove o ?aviso=cadastrado depois de mostrar o toast.
-  await expect(page).toHaveURL(/\/passageiros$/)
+  // O cadastro termina nos detalhes; o AvisoUrl remove o ?aviso= depois do toast.
+  await expect(page).toHaveURL(/\/passageiros\/[0-9a-f-]{36}$/)
+  // Volta à lista, que é o ponto de partida dos cenários.
+  await page.goto('/passageiros')
 }
 
 // Linha da tabela (desktop) ou cartão (celular) visível com o nome do passageiro.
@@ -124,5 +126,129 @@ test.describe('US1 – cadastro e lista', () => {
     await page.goto('/passageiros/novo')
     await expect(page.getByRole('heading', { name: 'Novo passageiro' })).toBeVisible()
     expect(await semRolagemHorizontal(page), 'rolagem horizontal em /passageiros/novo').toBe(true)
+  })
+})
+
+test.describe('US2 – detalhes', () => {
+  test.skip(!email || !senha, 'Defina E2E_EMAIL e E2E_SENHA para rodar estes cenários.')
+  test.afterAll(limparPassageirosDeTeste)
+
+  test('cadastro leva aos detalhes com os dados formatados', async ({ page }) => {
+    await entrarComContaDeTeste(page, '/passageiros')
+    const nome = nomeDeTeste('Detalhes')
+    await cadastrar(page, nome)
+
+    // O cadastro termina nos detalhes; a lista é aberta para navegar até eles.
+    await page.goto('/passageiros')
+    await itemDaLista(page, nome).getByRole('link', { name: nome }).click()
+    await expect(page).toHaveURL(/\/passageiros\/[0-9a-f-]{36}/)
+    await expect(page.getByRole('heading', { name: nome, level: 1 })).toBeVisible()
+    await expect(page.getByText('(11) 91234-5678')).toBeVisible()
+    await expect(page.getByText(/R\$\s12,50/)).toBeVisible()
+    await expect(page.getByText('Sem observação')).toBeVisible()
+    await expect(page.getByText('Ativo', { exact: true })).toBeVisible()
+    const data = /\d{2}\/\d{2}\/\d{4}/
+    await expect(page.getByText('Cadastrado em').locator('xpath=following-sibling::dd')).toHaveText(
+      data,
+    )
+    await expect(
+      page.getByText('Última alteração').locator('xpath=following-sibling::dd'),
+    ).toHaveText(data)
+    await expect(page.getByRole('link', { name: '(11) 91234-5678' })).toHaveAttribute(
+      'href',
+      'tel:+5511912345678',
+    )
+  })
+
+  test('voltar retorna à lista com a mesma busca', async ({ page }) => {
+    await entrarComContaDeTeste(page, '/passageiros')
+    const nome = nomeDeTeste('Voltar')
+    await cadastrar(page, nome)
+
+    await page.goto('/passageiros')
+    const busca = page.getByLabel('Buscar por nome')
+    await busca.fill(nome)
+    await expect(page).toHaveURL(/[?&]busca=/)
+    await itemDaLista(page, nome).getByRole('link', { name: nome }).click()
+    await expect(page.getByRole('heading', { name: nome, level: 1 })).toBeVisible()
+
+    await page.getByRole('main').getByRole('link', { name: 'Passageiros', exact: true }).click()
+    await expect(page).toHaveURL(/\/passageiros\?busca=/)
+    await expect(page.getByLabel('Buscar por nome')).toHaveValue(nome)
+  })
+
+  test('id inválido ou inexistente mostra página não encontrada', async ({ page }) => {
+    await entrarComContaDeTeste(page, '/passageiros')
+
+    await page.goto('/passageiros/abc')
+    await expect(page.getByText('Página não encontrada')).toBeVisible()
+    await page.goto('/passageiros/00000000-0000-4000-8000-000000000000')
+    await expect(page.getByText('Página não encontrada')).toBeVisible()
+  })
+})
+
+test.describe('US3 – edição', () => {
+  test.skip(!email || !senha, 'Defina E2E_EMAIL e E2E_SENHA para rodar estes cenários.')
+  test.afterAll(limparPassageirosDeTeste)
+
+  async function abrirDetalhes(page: Page, nome: string) {
+    await page.goto('/passageiros')
+    await itemDaLista(page, nome).getByRole('link', { name: nome }).click()
+    await expect(page.getByRole('heading', { name: nome, level: 1 })).toBeVisible()
+  }
+
+  test('editar valor e observação, e cancelar sem alterar', async ({ page }) => {
+    await entrarComContaDeTeste(page, '/passageiros')
+    const nome = nomeDeTeste('Editar')
+    await cadastrar(page, nome)
+    await abrirDetalhes(page, nome)
+
+    await page.getByRole('link', { name: 'Editar' }).click()
+    await expect(page).toHaveURL(/\/passageiros\/[0-9a-f-]{36}\/editar$/)
+    await expect(page.getByLabel('Nome')).toHaveValue(nome)
+    await expect(page.getByLabel('Telefone')).toHaveValue('(11) 91234-5678')
+    await expect(page.getByLabel('Valor padrão por trajeto')).toHaveValue('12,50')
+
+    await page.getByRole('link', { name: 'Cancelar' }).click()
+    await expect(page).toHaveURL(/\/passageiros\/[0-9a-f-]{36}$/)
+    await expect(page.getByText(/R\$\s12,50/)).toBeVisible()
+
+    await page.getByRole('link', { name: 'Editar' }).click()
+    await page.getByLabel('Valor padrão por trajeto').fill('12')
+    await page.getByLabel(/Observação/).fill('Paga por Pix')
+    await page.getByRole('button', { name: 'Salvar' }).click()
+
+    await expect(page.getByText('Passageiro atualizado')).toBeVisible()
+    await expect(page).toHaveURL(/\/passageiros\/[0-9a-f-]{36}$/)
+    await expect(page.getByText(/R\$\s12,00/)).toBeVisible()
+    await expect(page.getByText('Paga por Pix')).toBeVisible()
+  })
+
+  test('renomear para o nome de outro ativo é recusado', async ({ page }) => {
+    await entrarComContaDeTeste(page, '/passageiros')
+    const outro = nomeDeTeste('Outro')
+    const nome = nomeDeTeste('Renomear')
+    await cadastrar(page, outro)
+    await cadastrar(page, nome)
+    await abrirDetalhes(page, nome)
+
+    await page.getByRole('link', { name: 'Editar' }).click()
+    await page.getByLabel('Nome').fill(outro)
+    await page.getByRole('button', { name: 'Salvar' }).click()
+
+    await expect(page.getByText('Já existe um passageiro ativo com esse nome.')).toBeVisible()
+    await expect(page).toHaveURL(/\/editar$/)
+  })
+
+  test('sem rolagem horizontal nos detalhes e na edição', async ({ page }) => {
+    await entrarComContaDeTeste(page, '/passageiros')
+    const nome = nomeDeTeste('Layout')
+    await cadastrar(page, nome)
+    await abrirDetalhes(page, nome)
+    expect(await semRolagemHorizontal(page), 'rolagem horizontal nos detalhes').toBe(true)
+
+    await page.getByRole('link', { name: 'Editar' }).click()
+    await expect(page.getByRole('heading', { name: 'Editar passageiro' })).toBeVisible()
+    expect(await semRolagemHorizontal(page), 'rolagem horizontal na edição').toBe(true)
   })
 })

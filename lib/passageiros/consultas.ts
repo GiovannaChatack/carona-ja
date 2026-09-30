@@ -1,9 +1,12 @@
 // Consultas de passageiros. Uso só no servidor: o cliente da sessão aplica a RLS, então cada
 // motorista só recebe os próprios registros.
 
+import { cache } from 'react'
+
 import { createClient } from '@/lib/supabase/server'
 
 import type { Passageiro, SituacaoPassageiro } from './tipos'
+import { ehUuid } from './validacao'
 
 const COLUNAS =
   'id, nome, telefone, valor_padrao_centavos, observacao, arquivado_em, criado_em, atualizado_em'
@@ -23,3 +26,18 @@ export async function listarPassageiros(situacao: SituacaoPassageiro): Promise<P
     a.nome.localeCompare(b.nome, 'pt-BR', { sensitivity: 'base' }),
   )
 }
+
+// Compartilhada entre a página e o generateMetadata (uma consulta por requisição).
+export const obterPassageiro = cache(async (id: string): Promise<Passageiro | null> => {
+  if (!ehUuid(id)) return null
+
+  const supabase = await createClient()
+  // Passageiro de outra conta não é visível pela RLS: volta null.
+  const { data, error } = await supabase
+    .from('passageiros')
+    .select(COLUNAS)
+    .eq('id', id)
+    .maybeSingle()
+  if (error) throw new Error(`Falha ao obter passageiro: ${error.message}`)
+  return data as Passageiro | null
+})

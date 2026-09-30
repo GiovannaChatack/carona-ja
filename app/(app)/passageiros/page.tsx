@@ -3,7 +3,6 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { Suspense } from 'react'
 
-import { AvisoUrl } from '@/components/aviso-url'
 import { Button } from '@/components/ui/button'
 import { obterUsuarioLogado } from '@/lib/auth/sessao'
 import { listarPassageiros } from '@/lib/passageiros/consultas'
@@ -30,7 +29,6 @@ export default async function PassageirosPage() {
       </div>
       <Suspense>
         <ListaPassageiros passageiros={passageiros} />
-        <AvisoUrl mensagens={{ cadastrado: 'Passageiro cadastrado' }} />
       </Suspense>
     </div>
   )

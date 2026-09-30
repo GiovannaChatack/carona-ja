@@ -183,7 +183,7 @@ observação, situação e datas (quickstart, cenários 8, 9 e 15).
 
 ### Testes da História 2
 
-- [ ] T022 [P] [US2] Acrescentar a `tests/e2e/passageiros.spec.ts` o bloco `US2 – detalhes`:
+- [X] T022 [P] [US2] Acrescentar a `tests/e2e/passageiros.spec.ts` o bloco `US2 – detalhes`:
   - após o cadastro, a URL é `/passageiros/<uuid>` com o toast "Passageiro cadastrado" (atualizar a expectativa do bloco US1, que antes esperava a lista);
   - clicar no nome na lista (desktop) ou no cartão (celular) abre os detalhes com telefone formatado, `R$ 12,50`, "Sem observação", situação "Ativo", "Cadastrado em" e "Última alteração" no formato `DD/MM/AAAA`;
   - o telefone dos detalhes tem `href` `tel:+5511912345678`;
@@ -192,17 +192,17 @@ observação, situação e datas (quickstart, cenários 8, 9 e 15).
 
 ### Implementação da História 2
 
-- [ ] T023 [P] [US2] Gerar o componente `badge` com `npx shadcn@latest add badge` (se `components/ui/badge.tsx` ainda não existir)
-- [ ] T024 [US2] Acrescentar `obterPassageiro(id: string)` a `lib/passageiros/consultas.ts`, envolvido em `cache()` do React (a página e o `generateMetadata` compartilham a consulta): se `!ehUuid(id)` retorna `null` sem consultar o banco; senão `select` das colunas do tipo com `.eq('id', id).maybeSingle()` (outra conta → `null` pela RLS); lança erro se a consulta falhar
-- [ ] T025 [US2] Criar `app/(app)/passageiros/[id]/page.tsx`:
+- [X] T023 [P] [US2] Gerar o componente `badge` com `npx shadcn@latest add badge` (se `components/ui/badge.tsx` ainda não existir)
+- [X] T024 [US2] Acrescentar `obterPassageiro(id: string)` a `lib/passageiros/consultas.ts`, envolvido em `cache()` do React (a página e o `generateMetadata` compartilham a consulta): se `!ehUuid(id)` retorna `null` sem consultar o banco; senão `select` das colunas do tipo com `.eq('id', id).maybeSingle()` (outra conta → `null` pela RLS); lança erro se a consulta falhar
+- [X] T025 [US2] Criar `app/(app)/passageiros/[id]/page.tsx`:
   - `params: Promise<{ id: string }>` e `searchParams: Promise<...>` aguardados; `generateMetadata` com título `'<nome> · Caronas Já'`; passageiro `null` → `notFound()`;
   - link "Passageiros" (voltar) para `/passageiros`, repassando **apenas** `situacao` e `busca` lidos de `?de=` (fazer o parse com `URLSearchParams` e descartar o resto, para evitar redirecionamento aberto);
   - `h1` com o nome e um `Card` com `<dl>`: Telefone (`formatPhone`, link `tel:+55…`), "Valor padrão por trajeto" (`formatCurrency`), Observação (ou "Sem observação"), Situação (`Badge` "Ativo" ou "Arquivado em DD/MM/AAAA"), "Cadastrado em" e "Última alteração" (`formatDate`);
   - `<AvisoUrl mensagens={{ cadastrado: 'Passageiro cadastrado', atualizado: 'Passageiro atualizado', arquivado: 'Passageiro arquivado', reativado: 'Passageiro reativado' }} />` dentro de `<Suspense>`
-- [ ] T026 [US2] Tornar os passageiros da lista navegáveis:
+- [X] T026 [US2] Tornar os passageiros da lista navegáveis:
   - em `app/(app)/passageiros/lista-passageiros.tsx`, a coluna Nome vira um `Link` para `/passageiros/<id>?de=<querystring atual codificada>`, com `max-md:after:absolute max-md:after:inset-0` (o cartão inteiro vira clicável no celular) e o link do telefone recebe `relative z-10` (continua ligando);
   - em `components/responsive-table.tsx`, o `Card` do celular recebe a classe `relative`, sem mudar a API do componente
-- [ ] T027 [US2] Em `app/(app)/passageiros/actions.ts`, mudar o destino do sucesso de `cadastrarPassageiro` para `redirect('/passageiros/<id>?aviso=cadastrado')` e remover `cadastrado` das mensagens do `AvisoUrl` em `app/(app)/passageiros/page.tsx`
+- [X] T027 [US2] Em `app/(app)/passageiros/actions.ts`, mudar o destino do sucesso de `cadastrarPassageiro` para `redirect('/passageiros/<id>?aviso=cadastrado')` e remover `cadastrado` das mensagens do `AvisoUrl` em `app/(app)/passageiros/page.tsx`
 
 **Checkpoint**: os detalhes funcionam sozinhos, a partir da lista e depois do cadastro.
 
@@ -215,7 +215,7 @@ detalhes e na lista (quickstart, cenários 10 e 11).
 
 ### Testes da História 3
 
-- [ ] T028 [P] [US3] Acrescentar a `tests/e2e/passageiros.spec.ts` o bloco `US3 – edição`:
+- [X] T028 [P] [US3] Acrescentar a `tests/e2e/passageiros.spec.ts` o bloco `US3 – edição`:
   - "Editar" nos detalhes abre `/passageiros/<id>/editar` com os campos preenchidos (valor como `12,50`);
   - mudar o valor para `12` e a observação para "Paga por Pix" e salvar volta aos detalhes com o toast "Passageiro atualizado", `R$ 12,00` e a observação;
   - "Cancelar" volta aos detalhes sem alterar nada;
@@ -223,14 +223,14 @@ detalhes e na lista (quickstart, cenários 10 e 11).
 
 ### Implementação da História 3
 
-- [ ] T029 [US3] Acrescentar `editarPassageiro(id: string, estado: EstadoFormularioPassageiro, formData)` a `app/(app)/passageiros/actions.ts` (usado com `.bind(null, id)`), conforme [contracts/acoes.md](./contracts/acoes.md):
+- [X] T029 [US3] Acrescentar `editarPassageiro(id: string, estado: EstadoFormularioPassageiro, formData)` a `app/(app)/passageiros/actions.ts` (usado com `.bind(null, id)`), conforme [contracts/acoes.md](./contracts/acoes.md):
   - `!ehUuid(id)` → `erro` "Passageiro não encontrado.";
   - mesmas validações e mensagens de `cadastrarPassageiro`, incluindo `23505` e `valores`;
   - `update(...).eq('id', id).select('id')`; nenhuma linha → `erro` "Passageiro não encontrado.";
   - sucesso: `revalidatePath('/passageiros')`, `revalidatePath('/passageiros/<id>')` e `redirect('/passageiros/<id>?aviso=atualizado')` fora do try/catch
-- [ ] T030 [US3] Criar `app/(app)/passageiros/[id]/editar/page.tsx`: `params` aguardado; `obterPassageiro`, e `null` → `notFound()`; `metadata`/`generateMetadata` "Editar passageiro · Caronas Já"; `h1` "Editar passageiro"; `FormularioPassageiro` com `acao={editarPassageiro.bind(null, id)}`, `inicial` = `{ nome, telefone: formatPhone(telefone), valor: centavosParaCampo(valor_padrao_centavos), observacao: observacao ?? '' }`, `textoEnviar="Salvar"` e `hrefCancelar="/passageiros/<id>"`
-- [ ] T031 [US3] Adicionar o botão "Editar" (link para `/passageiros/<id>/editar`, ícone `Pencil`) na área de ações de `app/(app)/passageiros/[id]/page.tsx`
-- [ ] T032 [US3] Rodar `npm run lint`, `npm run typecheck`, `npm run test` e `npm run test:e2e` e corrigir as falhas
+- [X] T030 [US3] Criar `app/(app)/passageiros/[id]/editar/page.tsx`: `params` aguardado; `obterPassageiro`, e `null` → `notFound()`; `metadata`/`generateMetadata` "Editar passageiro · Caronas Já"; `h1` "Editar passageiro"; `FormularioPassageiro` com `acao={editarPassageiro.bind(null, id)}`, `inicial` = `{ nome, telefone: formatPhone(telefone), valor: centavosParaCampo(valor_padrao_centavos), observacao: observacao ?? '' }`, `textoEnviar="Salvar"` e `hrefCancelar="/passageiros/<id>"`
+- [X] T031 [US3] Adicionar o botão "Editar" (link para `/passageiros/<id>/editar`, ícone `Pencil`) na área de ações de `app/(app)/passageiros/[id]/page.tsx`
+- [X] T032 [US3] Rodar `npm run lint`, `npm run typecheck`, `npm run test` e `npm run test:e2e` e corrigir as falhas
 - [ ] T033 [US3] Fechar a Fatia B: commit em pt-BR, push na `main`, aguardar o deploy e validar em produção os cenários 8–11, 15 e 16 (detalhes e edição) do [quickstart.md](./quickstart.md)
 
 **Checkpoint da Fatia B**: cadastro completo de ponta a ponta (listar, inspecionar e editar).

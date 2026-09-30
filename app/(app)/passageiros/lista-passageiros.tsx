@@ -14,25 +14,43 @@ import { formatCurrency, formatPhone } from '@/lib/format'
 import type { Passageiro } from '@/lib/passageiros/tipos'
 import { normalizarParaBusca } from '@/lib/passageiros/validacao'
 
-const colunas: Coluna<Passageiro>[] = [
-  { chave: 'nome', titulo: 'Nome', essencial: true, render: (p) => p.nome },
-  {
-    chave: 'telefone',
-    titulo: 'Telefone',
-    essencial: true,
-    render: (p) => (
-      <a href={`tel:+55${p.telefone}`} className="underline-offset-4 hover:underline">
-        {formatPhone(p.telefone)}
-      </a>
-    ),
-  },
-  {
-    chave: 'valor',
-    titulo: 'Valor padrão',
-    essencial: true,
-    render: (p) => formatCurrency(p.valor_padrao_centavos),
-  },
-]
+// `de` é a querystring da lista: os detalhes a usam para o "voltar" reabrir a mesma busca.
+function montarColunas(de: string): Coluna<Passageiro>[] {
+  return [
+    {
+      chave: 'nome',
+      titulo: 'Nome',
+      essencial: true,
+      render: (p) => (
+        <Link
+          href={`/passageiros/${p.id}${de ? `?de=${encodeURIComponent(de)}` : ''}`}
+          className="font-medium underline-offset-4 hover:underline max-md:after:absolute max-md:after:inset-0"
+        >
+          {p.nome}
+        </Link>
+      ),
+    },
+    {
+      chave: 'telefone',
+      titulo: 'Telefone',
+      essencial: true,
+      render: (p) => (
+        <a
+          href={`tel:+55${p.telefone}`}
+          className="relative z-10 underline-offset-4 hover:underline"
+        >
+          {formatPhone(p.telefone)}
+        </a>
+      ),
+    },
+    {
+      chave: 'valor',
+      titulo: 'Valor padrão',
+      essencial: true,
+      render: (p) => formatCurrency(p.valor_padrao_centavos),
+    },
+  ]
+}
 
 // Lista com busca instantânea no cliente; o texto é espelhado em ?busca= (research §6).
 // Renderizar dentro de <Suspense> por usar useSearchParams.
@@ -50,6 +68,8 @@ export function ListaPassageiros({ passageiros }: { passageiros: Passageiro[] })
     const query = params.toString()
     router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false })
   }
+
+  const colunas = montarColunas(searchParams.toString())
 
   if (passageiros.length === 0) {
     return (

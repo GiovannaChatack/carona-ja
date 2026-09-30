@@ -66,7 +66,7 @@ export function ResponsiveTable<T>({
       <ul className="flex flex-col gap-3 md:hidden">
         {linhas.map((linha) => (
           <li key={chaveLinha(linha)}>
-            <Card>
+            <Card className="relative">
               <CardContent>
                 <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
                   {essenciais.map((c) => (
