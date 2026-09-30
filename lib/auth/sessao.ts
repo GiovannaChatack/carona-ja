@@ -16,12 +16,13 @@ export const obterUsuarioLogado = cache(async () => {
 
   const { data: perfil } = await supabase
     .from('perfis')
-    .select('nome_exibicao')
+    .select('nome_exibicao, criado_em')
     .eq('id', user.id)
     .maybeSingle()
 
   return {
     email: user.email ?? '',
+    criadoEm: (perfil?.criado_em as string | undefined) ?? undefined,
     nomeExibicao: perfil?.nome_exibicao ?? user.email?.split('@')[0] ?? 'Motorista',
   }
 })

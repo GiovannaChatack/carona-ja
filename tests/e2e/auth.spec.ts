@@ -61,7 +61,8 @@ test.describe('com conta de teste', () => {
     await page.reload()
     await expect(saudacao(page)).toBeVisible()
 
-    await page.getByRole('button', { name: 'Sair' }).click()
+    await page.getByRole('button', { name: 'Menu da conta' }).click()
+    await page.getByRole('menuitem', { name: 'Sair' }).click()
     await expect(page).toHaveURL(/\/entrar$/)
 
     await page.goto('/inicio')

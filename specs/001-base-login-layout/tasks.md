@@ -233,7 +233,7 @@ mostra a página 404 em pt-BR (quickstart.md, cenários 7–9).
 
 ### Testes da Fatia C (escrever primeiro e garantir que FALHEM)
 
-- [ ] T040 [P] [US2] Criar `tests/unit/format.test.ts` cobrindo `contracts/ui.md` → "Formatadores":
+- [X] T040 [P] [US2] Criar `tests/unit/format.test.ts` cobrindo `contracts/ui.md` → "Formatadores":
   - `formatCurrency(123456)` → `'R$ 1.234,56'`, `formatCurrency(0)` → `'R$ 0,00'` e `formatCurrency(5)` → `'R$ 0,05'` (comparar normalizando o espaço não separável ` ` para espaço comum);
   - `formatDate('2026-09-28T10:45:00Z')` → `'28/09/2026'`;
   - `formatTime('2026-09-28T10:45:00Z')` → `'07:45'` (fuso `America/Sao_Paulo`);
@@ -241,7 +241,7 @@ mostra a página 404 em pt-BR (quickstart.md, cenários 7–9).
   - `formatMonth('2026-09-15T12:00:00Z')` → `'setembro de 2026'`;
   - virada de fuso: `formatDate('2026-10-01T02:00:00Z')` → `'30/09/2026'`;
   - `formatCurrency(1.5)` lança erro (centavos devem ser inteiros)
-- [ ] T041 [P] [US2] Criar `tests/e2e/layout.spec.ts` (logado via `E2E_EMAIL`/`E2E_SENHA`). Verificações:
+- [X] T041 [P] [US2] Criar `tests/e2e/layout.spec.ts` (logado via `E2E_EMAIL`/`E2E_SENHA`). Verificações:
   - para as larguras 360, 768, 1280 e 1920px: `document.documentElement.scrollWidth <= clientWidth`;
   - em 360px, a BottomNav fica visível e a Sidebar oculta; em 1280px, o contrário;
   - o item "Início" tem `aria-current="page"` e bounding box ≥ 44×44px;
@@ -251,46 +251,46 @@ mostra a página 404 em pt-BR (quickstart.md, cenários 7–9).
 
 ### Implementação da Fatia C
 
-- [ ] T042 [P] [US2] Implementar `lib/format.ts` com `formatCurrency(centavos: number)`, `formatDate`, `formatTime`, `formatDateTime` e `formatMonth`:
+- [X] T042 [P] [US2] Implementar `lib/format.ts` com `formatCurrency(centavos: number)`, `formatDate`, `formatTime`, `formatDateTime` e `formatMonth`:
   - usar `Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })` e `Intl.DateTimeFormat('pt-BR', { timeZone: 'America/Sao_Paulo', ... })`;
   - exportar a constante `TIME_ZONE = 'America/Sao_Paulo'`;
   - `formatCurrency` lança `Error('Valor em centavos deve ser inteiro')` se `!Number.isInteger(centavos)` (faz T040 passar)
-- [ ] T043 [US2] Adicionar os componentes shadcn do layout: `npx shadcn@latest add sidebar sheet dropdown-menu avatar separator skeleton table alert-dialog tooltip` e, em `components/ui/button.tsx`, garantir altura mínima de 44px (`min-h-11`) nos tamanhos `default` e `icon` (FR-015)
-- [ ] T044 [P] [US2] Instalar `next-themes` e criar `components/theme-provider.tsx`; em `app/layout.tsx`, envolver o app com `<ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>` e adicionar `suppressHydrationWarning` ao `<html>` (FR-017)
-- [ ] T045 [P] [US2] Criar `components/theme-toggle.tsx`: botão `variant="ghost" size="icon"` com `aria-label="Alternar tema"`, ícones `Sun`/`Moon` do `lucide-react`, alternando entre `light` e `dark` via `useTheme()` com base em `resolvedTheme`
-- [ ] T046 [P] [US2] Criar `components/layout/nav-items.ts` exportando `navItems: { rotulo: string; href: string; icone: LucideIcon }[]`, **apenas** com `{ rotulo: 'Início', href: '/inicio', icone: House }` e um comentário indicando que cada slice futuro adiciona seu item aqui (máx. 5 itens para a BottomNav) (FR-013)
-- [ ] T047 [US2] Criar `components/layout/app-sidebar.tsx` a partir do bloco de dashboard do shadcn/ui:
+- [X] T043 [US2] Adicionar os componentes shadcn do layout: `npx shadcn@latest add sidebar sheet dropdown-menu avatar separator skeleton table alert-dialog tooltip` e, em `components/ui/button.tsx`, garantir altura mínima de 44px (`min-h-11`) nos tamanhos `default` e `icon` (FR-015)
+- [X] T044 [P] [US2] Instalar `next-themes` e criar `components/theme-provider.tsx`; em `app/layout.tsx`, envolver o app com `<ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>` e adicionar `suppressHydrationWarning` ao `<html>` (FR-017)
+- [X] T045 [P] [US2] Criar `components/theme-toggle.tsx`: botão `variant="ghost" size="icon"` com `aria-label="Alternar tema"`, ícones `Sun`/`Moon` do `lucide-react`, alternando entre `light` e `dark` via `useTheme()` com base em `resolvedTheme`
+- [X] T046 [P] [US2] Criar `components/layout/nav-items.ts` exportando `navItems: { rotulo: string; href: string; icone: LucideIcon }[]`, **apenas** com `{ rotulo: 'Início', href: '/inicio', icone: House }` e um comentário indicando que cada slice futuro adiciona seu item aqui (máx. 5 itens para a BottomNav) (FR-013)
+- [X] T047 [US2] Criar `components/layout/app-sidebar.tsx` a partir do bloco de dashboard do shadcn/ui:
   - `Sidebar` com `collapsible="none"`, visível apenas em `md:` (≥ 768px);
   - cabeçalho "Caronas Já" e itens de `navItems` com `isActive` pela rota atual (`usePathname`) e `aria-current="page"`;
   - rodapé com o nome e o e-mail da conta (FR-011)
-- [ ] T048 [P] [US2] Criar `components/layout/bottom-nav.tsx`:
+- [X] T048 [P] [US2] Criar `components/layout/bottom-nav.tsx`:
   - `<nav>` fixa no rodapé, com `md:hidden`, fundo `bg-background`, borda superior e `pb-[env(safe-area-inset-bottom)]`;
   - itens de `navItems` com ícone e rótulo, cada um com área mínima de 44×44px e `aria-current="page"` no ativo (FR-011, FR-015)
-- [ ] T049 [US2] Criar `components/layout/app-header.tsx`:
+- [X] T049 [US2] Criar `components/layout/app-header.tsx`:
   - "Caronas Já" visível apenas no celular e o título da página recebido por prop;
   - `ThemeToggle`;
   - `DropdownMenu` da conta (Avatar com as iniciais, nome, e-mail e o item "Sair", que submete `<form action="/sair" method="post">`) (FR-012)
-- [ ] T050 [US2] Criar `components/layout/app-shell.tsx`:
+- [X] T050 [US2] Criar `components/layout/app-shell.tsx`:
   - compõe `SidebarProvider` + `AppSidebar` + `AppHeader` + `<main>` + `BottomNav`;
   - `<main>` tem largura máxima de 1200px centralizada, padding de 16px e `pb-24 md:pb-6`, para não ficar coberto pela BottomNav;
   - recebe `usuario: { nome: string; email: string }` (depende de T045–T049)
-- [ ] T051 [US2] Atualizar `app/(app)/layout.tsx` para usar `AppShell` com os dados de `perfis`/`getUser()`, removendo o cabeçalho provisório criado em T038
-- [ ] T052 [P] [US2] Criar `components/empty-state.tsx` com as props `icone`, `titulo`, `descricao` e `acao?` (ReactNode), centralizado e com texto `text-muted-foreground`
-- [ ] T053 [P] [US2] Criar `components/responsive-table.tsx`:
+- [X] T051 [US2] Atualizar `app/(app)/layout.tsx` para usar `AppShell` com os dados de `perfis`/`getUser()`, removendo o cabeçalho provisório criado em T038
+- [X] T052 [P] [US2] Criar `components/empty-state.tsx` com as props `icone`, `titulo`, `descricao` e `acao?` (ReactNode), centralizado e com texto `text-muted-foreground`
+- [X] T053 [P] [US2] Criar `components/responsive-table.tsx`:
   - componente genérico `<ResponsiveTable<T> colunas={[{ chave, titulo, render?, essencial? }]} linhas={T[]} chaveLinha={(l) => string} vazio={ReactNode} />`;
   - a partir de 768px, renderiza o `Table` do shadcn;
   - abaixo de 768px, renderiza uma lista de `Card` com as colunas `essencial` (Princípio IV)
-- [ ] T054 [P] [US2] Criar `components/confirm-dialog.tsx` sobre o `AlertDialog`, com as props `titulo`, `descricao`, `textoConfirmar` (padrão "Confirmar"), `textoCancelar` (padrão "Cancelar"), `onConfirmar` e `gatilho`; o botão de confirmação usa `variant="destructive"`
-- [ ] T055 [US2] Atualizar `app/(app)/inicio/page.tsx`:
+- [X] T054 [P] [US2] Criar `components/confirm-dialog.tsx` sobre o `AlertDialog`, com as props `titulo`, `descricao`, `textoConfirmar` (padrão "Confirmar"), `textoCancelar` (padrão "Cancelar"), `onConfirmar` e `gatilho`; o botão de confirmação usa `variant="destructive"`
+- [X] T055 [US2] Atualizar `app/(app)/inicio/page.tsx`:
   - saudação "Olá, {nome_exibicao}";
   - `EmptyState` com o ícone `Car`, o título "Tudo pronto por aqui" e a descrição "Em breve você poderá cadastrar passageiros, registrar viagens e acompanhar pagamentos.";
   - **sem** botões nem links para telas inexistentes (FR-018)
-- [ ] T056 [P] [US2] Criar `app/not-found.tsx`: "Página não encontrada", uma descrição curta e um botão-link "Voltar ao início" → `/inicio` (FR-019)
-- [ ] T057 [P] [US2] Criar `app/(app)/error.tsx` e `app/(publico)/error.tsx` (Client Components): mensagem "Não foi possível conectar. Tente novamente." e botão "Tentar novamente" chamando `reset()` (FR-019)
-- [ ] T058 [US2] Definir a identidade visual em `app/globals.css` e `app/layout.tsx`:
+- [X] T056 [P] [US2] Criar `app/not-found.tsx`: "Página não encontrada", uma descrição curta e um botão-link "Voltar ao início" → `/inicio` (FR-019)
+- [X] T057 [P] [US2] Criar `app/(app)/error.tsx` e `app/(publico)/error.tsx` (Client Components): mensagem "Não foi possível conectar. Tente novamente." e botão "Tentar novamente" chamando `reset()` (FR-019). *Nota: no Next 16 a prop do `error.tsx` chama-se `retry()`; o conteúdo comum fica em `components/erro-conexao.tsx`.*
+- [X] T058 [US2] Definir a identidade visual em `app/globals.css` e `app/layout.tsx`:
   - fonte Geist via `next/font`, com tamanho base de 16px;
   - **uma** cor de destaque em `--primary`/`--primary-foreground` nos temas claro e escuro (sugestão: verde-azulado), com contraste ≥ 4.5:1 conferido nos dois temas (FR-010, FR-015)
-- [ ] T059 [US2] Usar os formatadores de `lib/format.ts` onde houver datas na base (ex.: "Membro desde {formatDate(criado_em)}" no menu da conta, em `components/layout/app-header.tsx`), para validar a integração dos formatadores com a interface
+- [X] T059 [US2] Usar os formatadores de `lib/format.ts` onde houver datas na base (ex.: "Membro desde {formatDate(criado_em)}" no menu da conta, em `components/layout/app-header.tsx`), para validar a integração dos formatadores com a interface
 - [ ] T060 [US2] Validar e publicar a Fatia C: rodar `npm run test` e `npm run test:e2e`, fazer push na `main` e executar os cenários 7–9 do quickstart.md em produção, no celular real e no computador
 
 **Checkpoint (Fatia C)**: o layout responsivo, o tema e os componentes base estão prontos e
