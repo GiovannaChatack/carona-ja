@@ -231,7 +231,10 @@ detalhes e na lista (quickstart, cenários 10 e 11).
 - [X] T030 [US3] Criar `app/(app)/passageiros/[id]/editar/page.tsx`: `params` aguardado; `obterPassageiro`, e `null` → `notFound()`; `metadata`/`generateMetadata` "Editar passageiro · Caronas Já"; `h1` "Editar passageiro"; `FormularioPassageiro` com `acao={editarPassageiro.bind(null, id)}`, `inicial` = `{ nome, telefone: formatPhone(telefone), valor: centavosParaCampo(valor_padrao_centavos), observacao: observacao ?? '' }`, `textoEnviar="Salvar"` e `hrefCancelar="/passageiros/<id>"`
 - [X] T031 [US3] Adicionar o botão "Editar" (link para `/passageiros/<id>/editar`, ícone `Pencil`) na área de ações de `app/(app)/passageiros/[id]/page.tsx`
 - [X] T032 [US3] Rodar `npm run lint`, `npm run typecheck`, `npm run test` e `npm run test:e2e` e corrigir as falhas
-- [ ] T033 [US3] Fechar a Fatia B: commit em pt-BR, push na `main`, aguardar o deploy e validar em produção os cenários 8–11, 15 e 16 (detalhes e edição) do [quickstart.md](./quickstart.md)
+- [X] T033 [US3] Fechar a Fatia B: commit em pt-BR, push na `main`, aguardar o deploy e validar em produção os cenários 8–11, 15 e 16 (detalhes e edição) do [quickstart.md](./quickstart.md)
+  - **Resultado (2026-09-30)**: commit `c934fb3` publicado em `https://carona-ja-theta.vercel.app`.
+    `passageiros.spec.ts` + `layout.spec.ts` com `E2E_BASE_URL` de produção: 34/34 (mobile e desktop),
+    cobrindo os cenários 8–11, 15 e 16 (detalhes, voltar com a busca, edição, 360/1280px).
 
 **Checkpoint da Fatia B**: cadastro completo de ponta a ponta (listar, inspecionar e editar).
 
