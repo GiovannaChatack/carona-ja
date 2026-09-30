@@ -204,7 +204,7 @@ cenários 1–6, 10 e 11).
   - o layout busca `nome_exibicao` em `perfis` e renderiza um cabeçalho mínimo provisório com "Caronas Já", nome, e-mail e um `<form action="/sair" method="post">` com o botão "Sair" (será substituído pelo AppShell na Fatia C);
   - `inicio/page.tsx` exibe "Olá, {nome_exibicao}";
   - um componente cliente dispara `toast.success('Senha atualizada')` quando `?senha=atualizada`
-- [ ] T039 [US1] **(manual)** Validar e publicar a Fatia B:
+- [X] T039 [US1] **(manual)** Validar e publicar a Fatia B:
   1. `npx supabase db push` (aplica `supabase/migrations/<timestamp>_perfis.sql`);
   2. criar a conta do dono em Auth → Users → Add user (auto-confirm);
   3. traduzir o template "Reset Password" para pt-BR com o link `{{ .SiteURL }}/auth/confirmar?token_hash={{ .TokenHash }}&type=recovery&next=/redefinir-senha`;
