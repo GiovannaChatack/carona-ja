@@ -9,6 +9,7 @@ export const senha = process.env.E2E_SENHA
 const nomesCriados = new Set<string>()
 
 // Nomes únicos por execução e por projeto (mobile/desktop rodam em paralelo na mesma conta).
+// Servem para passageiros e para a origem dos trajetos de teste.
 export function nomeDeTeste(base: string) {
   const nome = `E2E ${base} ${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`
   nomesCriados.add(nome)
@@ -25,9 +26,9 @@ export async function entrarComContaDeTeste(page: Page, destino: string) {
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
 }
 
-// Exclui os passageiros "E2E …" criados por este worker. A RLS limita à conta de teste; nunca
-// usa a chave service_role.
-export async function limparPassageirosDeTeste() {
+// Exclui os dados "E2E …" criados por este worker: primeiro os trajetos (pela origem), depois
+// os passageiros. A RLS limita à conta de teste; nunca usa a chave service_role.
+export async function limparDadosDeTeste() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
   if (!url || !anonKey || !email || !senha || nomesCriados.size === 0) return
@@ -36,13 +37,27 @@ export async function limparPassageirosDeTeste() {
   const { error: erroLogin } = await supabase.auth.signInWithPassword({ email, password: senha })
   if (erroLogin) throw erroLogin
 
+  const nomes = [...nomesCriados]
+  // Pela origem e também pelo destino (o sentido oposto começa por um ponto sem prefixo).
+  for (const coluna of ['origem', 'destino']) {
+    const { error: erroTrajetos } = await supabase
+      .from('trajetos')
+      .delete()
+      .ilike(coluna, 'E2E %')
+      .in(coluna, nomes)
+    if (erroTrajetos) throw erroTrajetos
+  }
+
   const { error } = await supabase
     .from('passageiros')
     .delete()
     .ilike('nome', 'E2E %')
-    .in('nome', [...nomesCriados])
+    .in('nome', nomes)
   if (error) throw error
   nomesCriados.clear()
   // 'local': o padrão (global) revogaria as sessões dos outros workers em execução.
   await supabase.auth.signOut({ scope: 'local' })
 }
+
+// Nome antigo, mantido por compatibilidade.
+export const limparPassageirosDeTeste = limparDadosDeTeste

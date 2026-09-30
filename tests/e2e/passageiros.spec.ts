@@ -3,7 +3,7 @@ import { expect, test, type Page } from '@playwright/test'
 import {
   email,
   entrarComContaDeTeste,
-  limparPassageirosDeTeste,
+  limparDadosDeTeste,
   nomeDeTeste,
   senha,
 } from './helpers/passageiros'
@@ -43,7 +43,7 @@ test('sem sessão, /passageiros leva ao login com o caminho de retorno', async (
 
 test.describe('US1 – cadastro e lista', () => {
   test.skip(!email || !senha, 'Defina E2E_EMAIL e E2E_SENHA para rodar estes cenários.')
-  test.afterAll(limparPassageirosDeTeste)
+  test.afterAll(limparDadosDeTeste)
 
   test('link na navegação, cadastro válido e lista formatada', async ({ page }) => {
     await entrarComContaDeTeste(page, '/inicio')
@@ -131,7 +131,7 @@ test.describe('US1 – cadastro e lista', () => {
 
 test.describe('US2 – detalhes', () => {
   test.skip(!email || !senha, 'Defina E2E_EMAIL e E2E_SENHA para rodar estes cenários.')
-  test.afterAll(limparPassageirosDeTeste)
+  test.afterAll(limparDadosDeTeste)
 
   test('cadastro leva aos detalhes com os dados formatados', async ({ page }) => {
     await entrarComContaDeTeste(page, '/passageiros')
@@ -189,7 +189,7 @@ test.describe('US2 – detalhes', () => {
 
 test.describe('US3 – edição', () => {
   test.skip(!email || !senha, 'Defina E2E_EMAIL e E2E_SENHA para rodar estes cenários.')
-  test.afterAll(limparPassageirosDeTeste)
+  test.afterAll(limparDadosDeTeste)
 
   async function abrirDetalhes(page: Page, nome: string) {
     await page.goto('/passageiros')
@@ -255,7 +255,7 @@ test.describe('US3 – edição', () => {
 
 test.describe('US4 – arquivar, reativar e excluir', () => {
   test.skip(!email || !senha, 'Defina E2E_EMAIL e E2E_SENHA para rodar estes cenários.')
-  test.afterAll(limparPassageirosDeTeste)
+  test.afterAll(limparDadosDeTeste)
 
   async function abrirDetalhes(page: Page, nome: string, situacao = '') {
     await page.goto(`/passageiros${situacao}`)

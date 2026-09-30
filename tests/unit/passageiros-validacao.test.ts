@@ -33,6 +33,13 @@ describe('parseValorEmCentavos', () => {
     expect(parseValorEmCentavos('   ')).toEqual({ ok: false, erro: 'Informe o valor padrão.' })
   })
 
+  it('vazio usa a mensagem informada', () => {
+    expect(parseValorEmCentavos('', 'Informe o valor.')).toEqual({
+      ok: false,
+      erro: 'Informe o valor.',
+    })
+  })
+
   it.each(['-1', '12,345', '10000', '10.000', 'abc', '1.23,4', '12,', ',5', '1,2,3'])(
     '%j é rejeitado',
     (entrada) => {
