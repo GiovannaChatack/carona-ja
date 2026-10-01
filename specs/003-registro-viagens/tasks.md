@@ -472,10 +472,18 @@ um valor (quickstart, cenários 14 e 15).
   - `FormularioViagem` com `acao={editarViagem.bind(null, id)}`, `inicial` de T050, `textoEnviar="Salvar alterações"`, `textoDuplicada="Salvar"` e `hrefCancelar="/viagens/<id>"`
 - [X] T054 [US4] Em `app/(app)/viagens/[id]/page.tsx`, adicionar o botão "Editar" (ícone `Pencil`, link para `/viagens/<id>/editar`), exibido somente para viagem ativa
 - [X] T055 Rodar `npm run lint`, `npm run typecheck`, `npm run test` e `npm run test:e2e` e corrigir as falhas
-- [ ] T056 Fechar a Fatia C:
+- [X] T056 Fechar a Fatia C:
   - commit em pt-BR, push e deploy;
   - **(manual)** migração em produção (T048);
   - validar em produção os cenários 14 e 15 do [quickstart.md](./quickstart.md) e registrar o resultado
+  - **Resultado (2026-10-01)**: Fatias C e D publicadas juntas (compartilham `actions.ts` e a tela
+    de detalhes). Migração aplicada em T048. Local (T055/T062): lint, typecheck, Prettier, 101/101
+    unitários e 104/104 e2e (20 falhas de `ConnectTimeoutError`/`fetch failed` com o Supabase na
+    execução paralela, todas aprovadas ao repetir em série). Commit `11fec61` publicado em
+    `https://carona-ja-theta.vercel.app`. Suíte e2e completa com `E2E_BASE_URL` de produção:
+    104/104 na primeira execução (2 workers). Cobre os cenários 14 (editar: sentido, remover e
+    acrescentar passageiro com valor padrão, valor registrado preservado, total recalculado) e 15
+    (passageiro arquivado da viagem continua marcado com "Arquivado"; outros arquivados não aparecem).
 
 **Checkpoint da Fatia C**: viagens podem ser corrigidas sem perder dados.
 
@@ -543,8 +551,12 @@ arquivadas.
     `editar_viagem` → `CJ006` (viagem), `CJ002` (trajeto), `CJ003` (passageiro), além de `CJ004`
     e `CJ005`; `insert` direto em `viagem_passageiros` → `23503`. **Pendente (manual)**: cenários
     25 e 26 com a segunda conta real.
-- [ ] T066 Commit em pt-BR, push na `main` e aguardar o deploy na Vercel
+- [X] T066 Commit em pt-BR, push na `main` e aguardar o deploy na Vercel
 - [ ] T067 Executar a validação completa do [quickstart.md](./quickstart.md) em produção (cenários 1–28, no celular e no desktop, com os tempos de SC-001 e SC-002 cronometrados) e registrar o resultado nesta tarefa
+  - **Parcial (2026-10-01)**: automatizados em produção, 104/104 e2e (mobile 360px e desktop
+    1280px) cobrem os cenários 1–24, além de 27 e 26 (aproximado, ver T065). **Pendentes
+    (manual)**: cronometrar SC-001 (registrar viagem < 30 s no celular) e SC-002 (trajeto < 30 s),
+    cenário 25 com a segunda conta e cenário 28 (sem rede), além de conferir 768 e 1920px.
 - [ ] T068 Marcar o slice como concluído: `**Status**: Concluído (<data>)` em `specs/003-registro-viagens/spec.md`; commit e push
 
 **Checkpoint da Fatia D**: slice 003 concluído. O próximo passo é `/speckit-specify` do slice 004
