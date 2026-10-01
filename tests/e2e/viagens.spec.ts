@@ -311,3 +311,217 @@ test.describe('US3 – lista e detalhes', () => {
     await expect(page.getByText('Página não encontrada')).toBeVisible()
   })
 })
+
+// Três passageiros (R$ 12,00, R$ 10,00 e R$ 9,00) e um trajeto.
+function cenarioDeEdicao() {
+  return prepararCenario({
+    passageiros: [
+      { base: 'Ana', valorCentavos: 1200 },
+      { base: 'Bruno', valorCentavos: 1000 },
+      { base: 'Caio', valorCentavos: 900 },
+    ],
+    trajeto: { origemBase: 'Casa', destino: 'Faculdade' },
+  })
+}
+
+function linhaDoPassageiro(page: Page, nome: string) {
+  return page.locator('main li').filter({ hasText: nome })
+}
+
+test.describe('US4 – editar viagem', () => {
+  test.skip(!email || !senha, 'Defina E2E_EMAIL e E2E_SENHA para rodar estes cenários.')
+  test.afterAll(limparDadosDeTeste)
+
+  test('edição preserva os valores registrados e ajusta os passageiros', async ({ page }) => {
+    const c = await cenarioDeEdicao()
+    const [ana, bruno, caio] = c.passageiros
+    // Ana com valor diferente do padrão: a edição deve mostrar o valor registrado.
+    const id = await registrarViagemPelaApi({
+      trajetoId: c.trajeto.id,
+      sentido: 'ida',
+      dataHoraLocal: '2021-05-10T07:30',
+      participacoes: [
+        { passageiro_id: ana.id, valor_centavos: 1500 },
+        { passageiro_id: bruno.id, valor_centavos: 1000 },
+      ],
+    })
+
+    await entrarComContaDeTeste(page, `/viagens/${id}`)
+    await page.getByRole('link', { name: 'Editar' }).click()
+    await expect(page).toHaveURL(new RegExp(`/viagens/${id}/editar$`))
+    await expect(page.getByRole('heading', { name: 'Editar viagem', level: 1 })).toBeVisible()
+    await expect(page.getByLabel('Trajeto')).toHaveValue(c.trajeto.id)
+    await expect(page.getByRole('radio', { name: 'Ida' })).toBeChecked()
+    await expect(page.getByLabel('Data e hora')).toHaveValue('2021-05-10T07:30')
+    await expect(page.getByRole('checkbox', { name: ana.nome })).toBeChecked()
+    await expect(page.getByLabel(`Valor de ${ana.nome}`)).toHaveValue('15,00')
+    await expect(page.getByLabel(`Valor de ${bruno.nome}`)).toHaveValue('10,00')
+    await expect(page.getByRole('checkbox', { name: caio.nome })).not.toBeChecked()
+    await expect(total(page)).toHaveText(/^Total: R\$\s25,00 · 2 passageiros$/)
+
+    await page.getByRole('radio', { name: 'Volta' }).check()
+    await page.getByRole('checkbox', { name: bruno.nome }).uncheck()
+    await page.getByRole('checkbox', { name: caio.nome }).check()
+    await expect(page.getByLabel(`Valor de ${caio.nome}`)).toHaveValue('9,00')
+    await expect(total(page)).toHaveText(/^Total: R\$\s24,00 · 2 passageiros$/)
+
+    await page.getByRole('button', { name: 'Salvar alterações' }).click()
+    await expect(page.getByText('Viagem atualizada')).toBeVisible()
+    await expect(page).toHaveURL(new RegExp(`/viagens/${id}(\\?.*)?$`))
+    await expect(
+      page.getByRole('heading', { name: `Volta: Faculdade → ${c.trajeto.origem}`, level: 1 }),
+    ).toBeVisible()
+    await expect(linhaDoPassageiro(page, ana.nome)).toContainText(/R\$\s15,00/)
+    await expect(linhaDoPassageiro(page, caio.nome)).toContainText(/R\$\s9,00/)
+    await expect(linhaDoPassageiro(page, bruno.nome)).toHaveCount(0)
+    await expect(page.getByText(/^R\$\s24,00$/)).toBeVisible()
+  })
+
+  test('passageiro arquivado da viagem continua; os outros arquivados não aparecem', async ({
+    page,
+  }) => {
+    const c = await cenarioDeEdicao()
+    const [ana, bruno, caio] = c.passageiros
+    const id = await registrarViagemPelaApi({
+      trajetoId: c.trajeto.id,
+      sentido: 'ida',
+      dataHoraLocal: '2021-05-11T07:30',
+      participacoes: [
+        { passageiro_id: ana.id, valor_centavos: 1200 },
+        { passageiro_id: bruno.id, valor_centavos: 1000 },
+      ],
+    })
+    const agora = new Date().toISOString()
+    await atualizarPassageiroPelaApi(bruno.id, { arquivado_em: agora })
+    await atualizarPassageiroPelaApi(caio.id, { arquivado_em: agora })
+
+    await entrarComContaDeTeste(page, `/viagens/${id}/editar`)
+    await expect(page.getByRole('checkbox', { name: bruno.nome })).toBeChecked()
+    await expect(linhaDoPassageiro(page, bruno.nome)).toContainText('Arquivado')
+    await expect(page.getByRole('checkbox', { name: caio.nome })).toHaveCount(0)
+
+    await page.getByLabel(`Valor de ${bruno.nome}`).fill('11')
+    await page.getByRole('button', { name: 'Salvar alterações' }).click()
+    await expect(page.getByText('Viagem atualizada')).toBeVisible()
+    await expect(linhaDoPassageiro(page, bruno.nome)).toContainText('Arquivado')
+    await expect(linhaDoPassageiro(page, bruno.nome)).toContainText(/R\$\s11,00/)
+  })
+
+  test('"Cancelar" volta aos detalhes sem alterar nada', async ({ page }) => {
+    const c = await cenarioDeEdicao()
+    const id = await registrarViagemPelaApi({
+      trajetoId: c.trajeto.id,
+      sentido: 'ida',
+      dataHoraLocal: '2021-05-12T07:30',
+      participacoes: [{ passageiro_id: c.passageiros[0].id, valor_centavos: 1200 }],
+    })
+
+    await entrarComContaDeTeste(page, `/viagens/${id}/editar`)
+    await page.getByRole('radio', { name: 'Volta' }).check()
+    await page.getByRole('link', { name: 'Cancelar' }).click()
+    await expect(page).toHaveURL(new RegExp(`/viagens/${id}$`))
+    await expect(
+      page.getByRole('heading', { name: `Ida: ${c.trajeto.origem} → Faculdade`, level: 1 }),
+    ).toBeVisible()
+  })
+
+  test('edição de viagem inexistente mostra página não encontrada', async ({ page }) => {
+    await entrarComContaDeTeste(page, '/viagens')
+
+    await page.goto('/viagens/00000000-0000-4000-8000-000000000000/editar')
+    await expect(page.getByText('Página não encontrada')).toBeVisible()
+  })
+})
+
+// Agora, no fuso de São Paulo, no formato do campo (AAAA-MM-DDTHH:mm).
+function agoraEmSaoPaulo() {
+  const partes = Object.fromEntries(
+    new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'America/Sao_Paulo',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hourCycle: 'h23',
+    })
+      .formatToParts(new Date())
+      .map((p) => [p.type, p.value]),
+  )
+  return `${partes.year}-${partes.month}-${partes.day}T${partes.hour}:${partes.minute}`
+}
+
+test.describe('US5 – arquivar e reativar viagem', () => {
+  test.skip(!email || !senha, 'Defina E2E_EMAIL e E2E_SENHA para rodar estes cenários.')
+  test.afterAll(limparDadosDeTeste)
+
+  test('ciclo ativa ⇄ arquivada, filtro e duplicidade', async ({ page }) => {
+    const c = await novoCenario()
+    const [ana] = c.passageiros
+    // Hoje: enquanto ativa, a viagem fica no topo da lista.
+    const id = await registrarViagemPelaApi({
+      trajetoId: c.trajeto.id,
+      sentido: 'ida',
+      dataHoraLocal: agoraEmSaoPaulo(),
+      participacoes: [{ passageiro_id: ana.id, valor_centavos: 1200 }],
+    })
+    const meus = () => itensDaLista(page).filter({ hasText: c.trajeto.origem })
+
+    await entrarComContaDeTeste(page, `/viagens/${id}`)
+    await page.getByRole('button', { name: 'Arquivar' }).click()
+    await expect(dialogo(page).getByText('Arquivar viagem?')).toBeVisible()
+    await expect(dialogo(page)).toContainText(
+      /A viagem de \d{2}\/\d{2}\/\d{4} deixará de ser considerada em totais e pendências\./,
+    )
+    await dialogo(page).getByRole('button', { name: 'Arquivar' }).click()
+    await expect(page.getByText('Viagem arquivada')).toBeVisible()
+    await expect(
+      page.getByText('Esta viagem está arquivada e não é considerada em totais e pendências.'),
+    ).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Reativar' })).toBeVisible()
+    await expect(page.getByRole('link', { name: 'Editar' })).toHaveCount(0)
+    await expect(page.getByRole('button', { name: 'Arquivar' })).toHaveCount(0)
+
+    // Some das ativas e aparece nas arquivadas.
+    await page.goto('/viagens')
+    await expect(page.getByRole('heading', { name: 'Viagens', level: 1 })).toBeVisible()
+    await expect(meus()).toHaveCount(0)
+    await page.getByRole('link', { name: 'Arquivadas' }).click()
+    await expect(page).toHaveURL(/situacao=arquivadas/)
+    await expect(page.getByRole('link', { name: 'Arquivadas' })).toHaveAttribute(
+      'aria-current',
+      'page',
+    )
+    await expect(meus()).toHaveCount(1)
+
+    // Viagem arquivada não é editável.
+    await page.goto(`/viagens/${id}/editar`)
+    await expect(page).toHaveURL(new RegExp(`/viagens/${id}$`))
+
+    // A arquivada não conta como duplicada (FR-015).
+    await page.goto('/viagens/nova')
+    await preencher(page, { ...c, passageiros: [ana] }, 'Ida')
+    await page.getByRole('button', { name: 'Registrar viagem' }).click()
+    await expect(page.getByText('Viagem registrada')).toBeVisible()
+    await expect(dialogo(page)).toHaveCount(0)
+    await expect(meus()).toHaveCount(1)
+
+    // Reativar devolve a viagem às ativas.
+    await page.goto(`/viagens/${id}`)
+    await page.getByRole('button', { name: 'Reativar' }).click()
+    await expect(page.getByText('Viagem reativada')).toBeVisible()
+    await expect(page.getByRole('link', { name: 'Editar' })).toBeVisible()
+    await page.goto('/viagens')
+    await expect(meus()).toHaveCount(2)
+  })
+
+  test('filtro de arquivadas sem rolagem horizontal', async ({ page }) => {
+    await entrarComContaDeTeste(page, '/viagens')
+    await page.goto('/viagens?situacao=arquivadas')
+    await expect(page.getByRole('link', { name: 'Arquivadas' })).toHaveAttribute(
+      'aria-current',
+      'page',
+    )
+    expect(await semRolagemHorizontal(page), 'rolagem horizontal nas arquivadas').toBe(true)
+  })
+})

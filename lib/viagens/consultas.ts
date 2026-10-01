@@ -3,12 +3,13 @@
 
 import { cache } from 'react'
 
+import { paraCampoDataHora } from '@/lib/format'
 import { createClient } from '@/lib/supabase/server'
 import { compararTrajetos } from '@/lib/trajetos/consultas'
 import type { Trajeto } from '@/lib/trajetos/tipos'
-import { ehUuid } from '@/lib/validacao'
+import { centavosParaCampo, ehUuid } from '@/lib/validacao'
 
-import type { Participacao, PassageiroOpcao, SituacaoViagem, ViagemResumo } from './tipos'
+import type { Participacao, PassageiroOpcao, Sentido, SituacaoViagem, ViagemResumo } from './tipos'
 
 const COLUNAS_TRAJETO = 'id, origem, destino, arquivado_em, criado_em, atualizado_em'
 
@@ -19,14 +20,34 @@ function compararNomes(a: string, b: string) {
   return a.localeCompare(b, 'pt-BR', { sensitivity: 'base' })
 }
 
-// Dados do formulário de nova viagem: trajetos e passageiros ativos e o trajeto sugerido (FR-014).
-export async function obterDadosFormularioViagem(): Promise<{
+type DadosFormularioViagem = {
   trajetos: Trajeto[]
   passageiros: PassageiroOpcao[]
   trajetoSugeridoId: string | null
-}> {
+  // Só na edição: o que está registrado, no formato dos campos do formulário.
+  viagem?: {
+    trajeto: string
+    sentido: Sentido
+    data_hora: string
+    participacoes: Record<string, string> // passageiro_id → valor em reais
+  }
+}
+
+// Dados do formulário de viagem: trajetos e passageiros ativos e o trajeto sugerido (FR-014).
+// Na edição (viagemId), inclui também o trajeto atual e os passageiros já vinculados, mesmo
+// arquivados (FR-019); viagem inexistente ou de outra conta devolve null.
+export async function obterDadosFormularioViagem(): Promise<DadosFormularioViagem>
+export async function obterDadosFormularioViagem(
+  viagemId: string,
+): Promise<DadosFormularioViagem | null>
+export async function obterDadosFormularioViagem(
+  viagemId?: string,
+): Promise<DadosFormularioViagem | null> {
+  const edicao = viagemId === undefined ? null : await obterViagem(viagemId)
+  if (viagemId !== undefined && !edicao) return null
+
   const supabase = await createClient()
-  const [trajetos, passageiros, ultima] = await Promise.all([
+  const [trajetos, passageiros, ultima, trajetoAtual] = await Promise.all([
     supabase.from('trajetos').select(COLUNAS_TRAJETO).is('arquivado_em', null),
     supabase
       .from('passageiros')
@@ -38,10 +59,17 @@ export async function obterDadosFormularioViagem(): Promise<{
       .order('criado_em', { ascending: false })
       .limit(1)
       .maybeSingle(),
+    edicao?.viagem.trajeto_arquivado_em
+      ? supabase
+          .from('trajetos')
+          .select(COLUNAS_TRAJETO)
+          .eq('id', edicao.viagem.trajeto_id)
+          .maybeSingle()
+      : Promise.resolve({ data: null, error: null }),
   ])
 
   // O erro é exibido por app/(app)/error.tsx.
-  const erro = trajetos.error ?? passageiros.error ?? ultima.error
+  const erro = trajetos.error ?? passageiros.error ?? ultima.error ?? trajetoAtual.error
   if (erro) throw new Error(`Falha ao carregar o formulário de viagem: ${erro.message}`)
 
   const ativos = (trajetos.data as Trajeto[]).sort(compararTrajetos)
@@ -52,12 +80,42 @@ export async function obterDadosFormularioViagem(): Promise<{
       ? ativos[0].id
       : null
 
+  const opcoes = passageiros.data as PassageiroOpcao[]
+  if (!edicao) {
+    return {
+      trajetos: ativos,
+      passageiros: opcoes.sort((a, b) => compararNomes(a.nome, b.nome)),
+      trajetoSugeridoId,
+    }
+  }
+
+  // Edição: acrescenta o que já está na viagem, sem duplicar os ativos.
+  const { viagem, participacoes } = edicao
+  const listaTrajetos = trajetoAtual.data
+    ? [...ativos, trajetoAtual.data as Trajeto].sort(compararTrajetos)
+    : ativos
+  const idsAtivos = new Set(opcoes.map((p) => p.id))
+  const vinculados: PassageiroOpcao[] = participacoes
+    .filter((p) => !idsAtivos.has(p.passageiro_id))
+    .map((p) => ({
+      id: p.passageiro_id,
+      nome: p.passageiro.nome,
+      valor_padrao_centavos: p.passageiro.valor_padrao_centavos,
+      arquivado_em: p.passageiro.arquivado_em,
+    }))
+
   return {
-    trajetos: ativos,
-    passageiros: (passageiros.data as PassageiroOpcao[]).sort((a, b) =>
-      compararNomes(a.nome, b.nome),
-    ),
+    trajetos: listaTrajetos,
+    passageiros: [...opcoes, ...vinculados].sort((a, b) => compararNomes(a.nome, b.nome)),
     trajetoSugeridoId,
+    viagem: {
+      trajeto: viagem.trajeto_id,
+      sentido: viagem.sentido,
+      data_hora: paraCampoDataHora(viagem.realizada_em),
+      participacoes: Object.fromEntries(
+        participacoes.map((p) => [p.passageiro_id, centavosParaCampo(p.valor_centavos)]),
+      ),
+    },
   }
 }
 

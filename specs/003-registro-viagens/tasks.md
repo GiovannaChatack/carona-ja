@@ -434,7 +434,7 @@ registrados.
 **Teste independente**: editar uma viagem trocando o sentido, removendo um passageiro e mudando
 um valor (quickstart, cenários 14 e 15).
 
-- [ ] T047 Criar a migração com `npx supabase migration new editar_viagem` e escrever `supabase/migrations/<timestamp>_editar_viagem.sql` com `public.editar_viagem(p_viagem_id uuid, p_trajeto_id uuid, p_sentido text, p_data_hora_local timestamp, p_participacoes jsonb, p_confirmar_duplicada boolean default false) returns void`, `language plpgsql security invoker set search_path = ''`, conforme [data-model.md](./data-model.md) e research §3:
+- [X] T047 Criar a migração com `npx supabase migration new editar_viagem` e escrever `supabase/migrations/<timestamp>_editar_viagem.sql` com `public.editar_viagem(p_viagem_id uuid, p_trajeto_id uuid, p_sentido text, p_data_hora_local timestamp, p_participacoes jsonb, p_confirmar_duplicada boolean default false) returns void`, `language plpgsql security invoker set search_path = ''`, conforme [data-model.md](./data-model.md) e research §3:
   - `select ... from public.viagens where id = p_viagem_id for update`; inexistente ou `arquivada_em is not null` → `CJ006`;
   - mesmas regras de `registrar_viagem`, com duas exceções:
     - o trajeto pode ser o `trajeto_id` atual mesmo arquivado; outro trajeto precisa estar ativo, senão `CJ002`;
@@ -443,30 +443,35 @@ um valor (quickstart, cenários 14 e 15).
   - `update` de `trajeto_id`, `sentido` e `realizada_em`;
   - participações por diferença: `delete` das que não estão em `p_participacoes`; `update` de `valor_centavos` das que continuam (só quando mudou); `insert` das novas;
   - `revoke ... from public, anon` e `grant execute ... to authenticated`
-- [ ] T048 **(manual)** Aplicar a migração com `npx supabase db push` e conferir a função no painel
-- [ ] T049 [P] [US4] Acrescentar a `tests/e2e/viagens.spec.ts` o bloco `US4 – editar viagem`:
+- [X] T048 **(manual)** Aplicar a migração com `npx supabase db push` e conferir a função no painel
+  - **Resultado (2026-10-01)**: `20261001153855_editar_viagem.sql` aplicada pelo agente com
+    `db push`, com autorização do usuário. Conferido pela API: `editar_viagem` negada a `anon`
+    (`42501`) e devolvendo `CJ002`–`CJ006` para a conta de teste.
+- [X] T049 [P] [US4] Acrescentar a `tests/e2e/viagens.spec.ts` o bloco `US4 – editar viagem`:
   - "Editar" nos detalhes abre `/viagens/<id>/editar` com o trajeto, o sentido, a data e os passageiros marcados com os **valores registrados** (não os padrões atuais);
   - trocar para "Volta", desmarcar um passageiro, marcar um terceiro (vem com o valor padrão dele) e salvar leva aos detalhes com o toast "Viagem atualizada", "Volta: …" e o total recalculado; o valor do passageiro mantido não mudou;
   - com um passageiro da viagem arquivado (pela API), ele aparece marcado com "Arquivado" no formulário e continua após salvar; passageiros arquivados que não estavam na viagem não aparecem;
   - "Cancelar" volta aos detalhes sem alterar nada;
   - `/viagens/<uuid-inexistente>/editar` mostra "Página não encontrada"
-- [ ] T050 [US4] Estender `obterDadosFormularioViagem(viagemId?)` em `lib/viagens/consultas.ts`: com `viagemId`, carrega `obterViagem(viagemId)` e inclui:
+- [X] T050 [US4] Estender `obterDadosFormularioViagem(viagemId?)` em `lib/viagens/consultas.ts`: com `viagemId`, carrega `obterViagem(viagemId)` e inclui:
   - o trajeto atual, mesmo arquivado;
   - os passageiros já vinculados, mesmo arquivados (sem duplicar os ativos);
   - `viagem` com `sentido`, `data_hora = paraCampoDataHora(realizada_em)` e `participacoes` (`passageiro_id` → `centavosParaCampo(valor_centavos)`);
   - a viagem ausente devolve `null`
-- [ ] T051 [US4] Acrescentar `editarViagem(id, estado, formData)` a `app/(app)/viagens/actions.ts`:
+- [X] T051 [US4] Acrescentar `editarViagem(id, estado, formData)` a `app/(app)/viagens/actions.ts`:
   - `!ehUuid(id)` → "Viagem não encontrada.";
   - mesma validação e tradução de erros de `registrarViagem`, mais `CJ006` → `erro` "Viagem não encontrada.";
   - `rpc('editar_viagem', { p_viagem_id: id, ... })`;
   - sucesso: revalida `/viagens` e `/viagens/<id>`; `redirect('/viagens/<id>?aviso=atualizada')`
-- [ ] T052 [US4] Ajustar `app/(app)/viagens/formulario-viagem.tsx` para a edição: `inicial.participacoes` marca os passageiros e usa os valores registrados (o valor padrão só entra quando um passageiro é marcado pela primeira vez nesta tela); sentido e trajeto pré-selecionados. Não deve haver nenhuma mudança de comportamento na nova viagem
-- [ ] T053 [US4] Criar `app/(app)/viagens/[id]/editar/page.tsx`:
+- [X] T052 [US4] Ajustar `app/(app)/viagens/formulario-viagem.tsx` para a edição: `inicial.participacoes` marca os passageiros e usa os valores registrados (o valor padrão só entra quando um passageiro é marcado pela primeira vez nesta tela); sentido e trajeto pré-selecionados. Não deve haver nenhuma mudança de comportamento na nova viagem
+  - **Nota**: o formulário da Fatia B já tratava `inicial.participacoes` dessa forma; nenhuma
+    alteração foi necessária.
+- [X] T053 [US4] Criar `app/(app)/viagens/[id]/editar/page.tsx`:
   - `null` → `notFound()`; viagem arquivada → `redirect('/viagens/<id>')`;
   - título "Editar viagem · Caronas Já" e `h1` "Editar viagem";
   - `FormularioViagem` com `acao={editarViagem.bind(null, id)}`, `inicial` de T050, `textoEnviar="Salvar alterações"`, `textoDuplicada="Salvar"` e `hrefCancelar="/viagens/<id>"`
-- [ ] T054 [US4] Em `app/(app)/viagens/[id]/page.tsx`, adicionar o botão "Editar" (ícone `Pencil`, link para `/viagens/<id>/editar`), exibido somente para viagem ativa
-- [ ] T055 Rodar `npm run lint`, `npm run typecheck`, `npm run test` e `npm run test:e2e` e corrigir as falhas
+- [X] T054 [US4] Em `app/(app)/viagens/[id]/page.tsx`, adicionar o botão "Editar" (ícone `Pencil`, link para `/viagens/<id>/editar`), exibido somente para viagem ativa
+- [X] T055 Rodar `npm run lint`, `npm run typecheck`, `npm run test` e `npm run test:e2e` e corrigir as falhas
 - [ ] T056 Fechar a Fatia C:
   - commit em pt-BR, push e deploy;
   - **(manual)** migração em produção (T048);
@@ -489,37 +494,37 @@ arquivadas.
 **Teste independente**: arquivar uma viagem, conferir que ela some da lista e aparece em
 "Arquivadas", e reativá-la (quickstart, cenários 17 e 18).
 
-- [ ] T057 [P] [US5] Acrescentar a `tests/e2e/viagens.spec.ts` o bloco `US5 – arquivar e reativar viagem`:
+- [X] T057 [P] [US5] Acrescentar a `tests/e2e/viagens.spec.ts` o bloco `US5 – arquivar e reativar viagem`:
   - "Arquivar" abre "Arquivar viagem?"; ao confirmar, os detalhes mostram o toast "Viagem arquivada", o aviso "Esta viagem está arquivada e não é considerada em totais e pendências." e apenas o botão "Reativar";
   - a viagem some da lista padrão e aparece em `?situacao=arquivadas`;
   - `/viagens/<id>/editar` de uma viagem arquivada redireciona para os detalhes;
   - "Reativar" mostra o toast "Viagem reativada" e a viagem volta à lista de ativas;
   - uma viagem arquivada não dispara o aviso de duplicidade ao registrar outra no mesmo trajeto, sentido e dia
-- [ ] T058 [US5] Acrescentar a `app/(app)/viagens/actions.ts` as actions `arquivarViagem(id, estado)` e `reativarViagem(id, estado)`:
+- [X] T058 [US5] Acrescentar a `app/(app)/viagens/actions.ts` as actions `arquivarViagem(id, estado)` e `reativarViagem(id, estado)`:
   - arquivar: `update({ arquivada_em: new Date().toISOString() }).eq('id', id).is('arquivada_em', null)`;
   - reativar: `update({ arquivada_em: null }).eq('id', id)`;
   - nenhuma linha → "Viagem não encontrada."; outros erros → genérico;
   - revalidam `/viagens` e `/viagens/<id>`; `redirect('/viagens/<id>?aviso=arquivada|reativada')` fora do `try/catch`
-- [ ] T059 [US5] Criar `app/(app)/viagens/[id]/acoes-viagem.tsx` (cliente) com props `id`, `dataFormatada` e `arquivada`:
+- [X] T059 [US5] Criar `app/(app)/viagens/[id]/acoes-viagem.tsx` (cliente) com props `id`, `dataFormatada` e `arquivada`:
   - ativa: "Arquivar" (`secondary`, ícone `Archive`) com `ConfirmDialog` "Arquivar viagem?" e a descrição de [contracts/rotas.md](./contracts/rotas.md);
   - arquivada: "Reativar" (ícone `ArchiveRestore`), sem confirmação;
   - erro em `role="alert"`
-- [ ] T060 [US5] Em `app/(app)/viagens/[id]/page.tsx`: renderizar `AcoesViagem` e, quando arquivada, a faixa de aviso, escondendo "Editar" (T054)
-- [ ] T061 [US5] Adicionar o filtro por situação à lista:
+- [X] T060 [US5] Em `app/(app)/viagens/[id]/page.tsx`: renderizar `AcoesViagem` e, quando arquivada, a faixa de aviso, escondendo "Editar" (T054)
+- [X] T061 [US5] Adicionar o filtro por situação à lista:
   - `app/(app)/viagens/page.tsx` lê `?situacao` (`'arquivadas'`; qualquer outro valor = ativas) e passa para `listarViagens`;
   - `lista-viagens.tsx` mostra a alternância "Ativas" / "Arquivadas" (links com `aria-current`, alvos ≥ 44px, voltando `pagina` para 1) e o `EmptyState` "Nenhuma viagem arquivada";
   - o "Carregar mais" preserva `situacao`
-- [ ] T062 Rodar `npm run lint`, `npm run typecheck`, `npm run test` e `npm run test:e2e` e corrigir as falhas
+- [X] T062 Rodar `npm run lint`, `npm run typecheck`, `npm run test` e `npm run test:e2e` e corrigir as falhas
 
 **Checkpoint**: gestão completa de viagens funcionando.
 
 ## Fase 9: Acabamento e encerramento do slice
 
-- [ ] T063 [P] Atualizar o `README.md`:
+- [X] T063 [P] Atualizar o `README.md`:
   - citar o item de navegação "Viagens" e a rota `/viagens/trajetos`;
   - na seção de padrões para os próximos slices, documentar as funções SQL com `security invoker`, os SQLSTATE `CJ001`–`CJ006` e a regra de que totais, pendências e resumos MUST filtrar `viagens.arquivada_em is null` (plan, Constitution Check);
   - citar `supabase/migrations/<timestamp>_viagens.sql` como modelo de FK composta com `motorista_id`
-- [ ] T064 [P] Acrescentar em `specs/001-base-login-layout/data-model.md` (Parte 2, seções `viagens` e `viagem_passageiros`) uma nota apontando para `specs/003-registro-viagens/data-model.md`, que:
+- [X] T064 [P] Acrescentar em `specs/001-base-login-layout/data-model.md` (Parte 2, seções `viagens` e `viagem_passageiros`) uma nota apontando para `specs/003-registro-viagens/data-model.md`, que:
   - criou `trajetos`;
   - trocou `observacao` por `trajeto_id` e `sentido`;
   - acrescentou `arquivada_em`;
@@ -530,6 +535,14 @@ arquivadas.
   - confirmar que nenhuma action lê `motorista_id` do formulário;
   - confirmar no painel que `registrar_viagem` e `editar_viagem` não podem ser executadas por `anon`;
   - repetir os cenários 25–27 do [quickstart.md](./quickstart.md) (o 25 exige a segunda conta: **manual**)
+  - **Resultado (2026-10-01)**: `service_role` só aparece em comentários, no README e na
+    constituição; `motorista_id` não é lido de nenhum formulário (só comentários nas actions).
+    Cenário 27 pela API com a chave anon: 0 linhas em `trajetos`, `viagens`,
+    `viagem_passageiros`, `viagens_resumo` e `passageiros`; `registrar_viagem` e `editar_viagem`
+    negadas (`42501`). Cenário 26 aproximado com a conta de teste e ids que não são dela:
+    `editar_viagem` → `CJ006` (viagem), `CJ002` (trajeto), `CJ003` (passageiro), além de `CJ004`
+    e `CJ005`; `insert` direto em `viagem_passageiros` → `23503`. **Pendente (manual)**: cenários
+    25 e 26 com a segunda conta real.
 - [ ] T066 Commit em pt-BR, push na `main` e aguardar o deploy na Vercel
 - [ ] T067 Executar a validação completa do [quickstart.md](./quickstart.md) em produção (cenários 1–28, no celular e no desktop, com os tempos de SC-001 e SC-002 cronometrados) e registrar o resultado nesta tarefa
 - [ ] T068 Marcar o slice como concluído: `**Status**: Concluído (<data>)` em `specs/003-registro-viagens/spec.md`; commit e push

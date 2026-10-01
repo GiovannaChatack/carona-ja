@@ -7,8 +7,12 @@ resumo mensal. Funciona no celular e no computador.
 - **Banco, autenticação e API**: Supabase (Postgres com RLS e Supabase Auth).
 - **Custo**: planos gratuitos da Vercel e do Supabase.
 
-A documentação de cada funcionalidade fica em [`specs/`](./specs/). O slice atual é o
-[001 — Base do projeto](./specs/001-base-login-layout/spec.md).
+A documentação de cada funcionalidade fica em [`specs/`](./specs/). Slices concluídos:
+
+- [001 — Base do projeto](./specs/001-base-login-layout/spec.md);
+- [002 — Registro de passageiros](./specs/002-registro-passageiros/spec.md);
+- [003 — Trajetos e registro de viagens](./specs/003-registro-viagens/spec.md): item de
+  navegação "Viagens" (`/viagens`), com os trajetos em `/viagens/trajetos`.
 
 ## Pré-requisitos
 
@@ -157,11 +161,12 @@ A Sidebar (desktop), a BottomNav (celular) e o título do cabeçalho leem a mesm
 quando a tela já existir**, com um ícone do `lucide-react`:
 
 ```ts
-import { House, Users } from 'lucide-react'
+import { Car, House, Users } from 'lucide-react'
 
 export const navItems: NavItem[] = [
   { rotulo: 'Início', href: '/inicio', icone: House },
   { rotulo: 'Passageiros', href: '/passageiros', icone: Users },
+  { rotulo: 'Viagens', href: '/viagens', icone: Car },
 ]
 ```
 
@@ -219,6 +224,49 @@ create policy "<tabela>: dono exclui os próprios registros"
 
 Aplique com `npx supabase db push` e confirme, com a chave anon, que outro usuário não vê as
 linhas (como no cenário 11 do [quickstart](./specs/001-base-login-layout/quickstart.md)).
+
+### Relacionar tabelas de donos: chaves estrangeiras compostas
+
+A verificação de uma FK ignora a RLS. Para impedir que um motorista vincule um registro de outra
+conta (conhecendo o `id`), a tabela referenciada ganha `unique (id, motorista_id)` e a FK inclui
+o dono, por exemplo `foreign key (passageiro_id, motorista_id) references public.passageiros (id,
+motorista_id)`. O modelo é
+[`supabase/migrations/20260930172802_viagens.sql`](./supabase/migrations/20260930172802_viagens.sql).
+Sem `on delete`, a FK bloqueia a exclusão do registro referenciado (`23503`), e a action traduz
+o erro para "… Arquive-o.".
+
+### Gravações com várias tabelas: funções SQL `security invoker`
+
+Quando uma gravação envolve várias linhas (ex.: a viagem e as participações), use uma função
+`language plpgsql security invoker set search_path = ''`, que roda sob a RLS de quem chama e
+grava tudo em uma transação. Qualifique os nomes com `public.` e restrinja a execução:
+
+```sql
+revoke execute on function public.<funcao>(<tipos>) from public, anon;
+grant execute on function public.<funcao>(<tipos>) to authenticated;
+```
+
+As funções levantam erros com SQLSTATE próprios (`raise exception using errcode = 'CJ00x'`),
+que a action traduz para a mensagem no campo certo:
+
+| Código  | Significado                                                  |
+| ------- | ------------------------------------------------------------ |
+| `CJ001` | viagem duplicada no dia (pede confirmação; data no `detail`) |
+| `CJ002` | trajeto inexistente, de outra conta ou arquivado             |
+| `CJ003` | passageiro inexistente, de outra conta ou arquivado          |
+| `CJ004` | participações ou sentido inválidos                           |
+| `CJ005` | data e hora mais de 1 dia no futuro                          |
+| `CJ006` | viagem inexistente, de outra conta ou arquivada (edição)     |
+
+Modelos: `registrar_viagem` e `editar_viagem` em
+[`supabase/migrations/`](./supabase/migrations/).
+
+### Viagens arquivadas não entram em totais
+
+Viagens não são excluídas pela interface: são arquivadas (`viagens.arquivada_em`). Toda consulta
+de totais, pendências e resumos dos próximos slices **MUST** filtrar `viagens.arquivada_em is null`
+(ou `viagens_resumo.arquivada_em is null`). O total de uma viagem vem sempre da view
+`viagens_resumo`, nunca é digitado nem guardado.
 
 ## Observação: pausa do plano gratuito do Supabase
 

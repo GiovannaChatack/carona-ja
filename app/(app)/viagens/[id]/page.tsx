@@ -1,4 +1,4 @@
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, Pencil } from 'lucide-react'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
@@ -6,12 +6,15 @@ import { Suspense } from 'react'
 
 import { AvisoUrl } from '@/components/aviso-url'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { obterUsuarioLogado } from '@/lib/auth/sessao'
 import { formatCurrency, formatDate, formatDateTime } from '@/lib/format'
 import { rotuloTrajeto } from '@/lib/trajetos/validacao'
 import { obterViagem } from '@/lib/viagens/consultas'
 import { percurso } from '@/lib/viagens/validacao'
+
+import { AcoesViagem } from './acoes-viagem'
 
 type Props = {
   params: Promise<{ id: string }>
@@ -48,6 +51,7 @@ export default async function ViagemPage({ params, searchParams }: Props) {
   if (!dados) notFound()
 
   const { viagem, participacoes } = dados
+  const arquivada = viagem.arquivada_em !== null
   const sentido = viagem.sentido === 'ida' ? 'Ida' : 'Volta'
   const itens: [string, React.ReactNode][] = [
     ['Data e hora', formatDateTime(viagem.realizada_em)],
@@ -79,6 +83,11 @@ export default async function ViagemPage({ params, searchParams }: Props) {
           </dl>
         </CardContent>
       </Card>
+      {arquivada && (
+        <p className="rounded-lg border bg-muted px-4 py-3 text-sm">
+          Esta viagem está arquivada e não é considerada em totais e pendências.
+        </p>
+      )}
       <section aria-labelledby="passageiros-titulo" className="flex flex-col gap-3">
         <h2 id="passageiros-titulo" className="text-lg font-semibold">
           Passageiros
@@ -105,6 +114,21 @@ export default async function ViagemPage({ params, searchParams }: Props) {
           </CardContent>
         </Card>
       </section>
+      <div className="flex flex-wrap gap-3">
+        {!arquivada && (
+          <Button asChild variant="outline">
+            <Link href={`/viagens/${viagem.id}/editar`}>
+              <Pencil data-icon="inline-start" aria-hidden />
+              Editar
+            </Link>
+          </Button>
+        )}
+        <AcoesViagem
+          id={viagem.id}
+          dataFormatada={formatDate(viagem.realizada_em)}
+          arquivada={arquivada}
+        />
+      </div>
       <Suspense>
         <AvisoUrl
           mensagens={{

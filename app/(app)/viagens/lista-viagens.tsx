@@ -6,7 +6,8 @@ import { ResponsiveTable, type Coluna } from '@/components/responsive-table'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { formatCurrency, formatDateTime } from '@/lib/format'
-import type { ViagemResumo } from '@/lib/viagens/tipos'
+import { cn } from '@/lib/utils'
+import type { SituacaoViagem, ViagemResumo } from '@/lib/viagens/tipos'
 import { percurso } from '@/lib/viagens/validacao'
 
 // `de` é a querystring da lista: os detalhes a usam para o "voltar" reabrir a mesma página.
@@ -56,7 +57,36 @@ function montarColunas(de: string): Coluna<ViagemResumo>[] {
   ]
 }
 
+// Alternância Ativas/Arquivadas; trocar de situação volta para a primeira página.
+function AlternanciaSituacao({ situacao }: { situacao: SituacaoViagem }) {
+  const opcoes: { valor: SituacaoViagem; rotulo: string; href: string }[] = [
+    { valor: 'ativas', rotulo: 'Ativas', href: '/viagens' },
+    { valor: 'arquivadas', rotulo: 'Arquivadas', href: '/viagens?situacao=arquivadas' },
+  ]
+  return (
+    <nav aria-label="Situação" className="flex w-fit gap-1 rounded-lg bg-muted p-1">
+      {opcoes.map(({ valor, rotulo, href }) => {
+        const atual = valor === situacao
+        return (
+          <Link
+            key={valor}
+            href={href}
+            aria-current={atual ? 'page' : undefined}
+            className={cn(
+              'inline-flex h-11 min-w-24 items-center justify-center rounded-md px-4 text-sm font-medium',
+              atual ? 'bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground',
+            )}
+          >
+            {rotulo}
+          </Link>
+        )
+      })}
+    </nav>
+  )
+}
+
 type Props = {
+  situacao: SituacaoViagem
   viagens: ViagemResumo[]
   temMais: boolean
   pagina: number
@@ -64,32 +94,45 @@ type Props = {
   de: string
 }
 
-export function ListaViagens({ viagens, temMais, pagina, de }: Props) {
+export function ListaViagens({ situacao, viagens, temMais, pagina, de }: Props) {
   if (viagens.length === 0) {
     return (
-      <EmptyState
-        icone={Car}
-        titulo="Nenhuma viagem registrada"
-        descricao="Registre cada ida ou volta com os passageiros que foram e quanto cada um pagou."
-        acao={
-          <div className="flex flex-col gap-3 sm:flex-row">
-            <Button asChild>
-              <Link href="/viagens/nova">Nova viagem</Link>
-            </Button>
-            <Button asChild variant="outline">
-              <Link href="/viagens/trajetos">Trajetos</Link>
-            </Button>
-          </div>
-        }
-      />
+      <div className="flex flex-col gap-4">
+        <AlternanciaSituacao situacao={situacao} />
+        {situacao === 'arquivadas' ? (
+          <EmptyState
+            icone={Car}
+            titulo="Nenhuma viagem arquivada"
+            descricao="As viagens que você arquivar aparecem aqui e podem ser reativadas."
+          />
+        ) : (
+          <EmptyState
+            icone={Car}
+            titulo="Nenhuma viagem registrada"
+            descricao="Registre cada ida ou volta com os passageiros que foram e quanto cada um pagou."
+            acao={
+              <div className="flex flex-col gap-3 sm:flex-row">
+                <Button asChild>
+                  <Link href="/viagens/nova">Nova viagem</Link>
+                </Button>
+                <Button asChild variant="outline">
+                  <Link href="/viagens/trajetos">Trajetos</Link>
+                </Button>
+              </div>
+            }
+          />
+        )}
+      </div>
     )
   }
 
+  // Preserva a situação ao carregar mais.
   const proxima = new URLSearchParams(de)
   proxima.set('pagina', String(pagina + 1))
 
   return (
     <div className="flex flex-col gap-4">
+      <AlternanciaSituacao situacao={situacao} />
       <ResponsiveTable
         colunas={montarColunas(de)}
         linhas={viagens}

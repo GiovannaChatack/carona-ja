@@ -7,6 +7,7 @@ import { AvisoUrl } from '@/components/aviso-url'
 import { Button } from '@/components/ui/button'
 import { obterUsuarioLogado } from '@/lib/auth/sessao'
 import { listarViagens } from '@/lib/viagens/consultas'
+import type { SituacaoViagem } from '@/lib/viagens/tipos'
 
 import { ListaViagens } from './lista-viagens'
 
@@ -15,7 +16,9 @@ export const metadata: Metadata = { title: 'Viagens · Caronas Já' }
 const POR_PAGINA = 20
 const PAGINA_MAX = 50
 
-type Props = { searchParams: Promise<{ pagina?: string | string[] }> }
+type Props = {
+  searchParams: Promise<{ pagina?: string | string[]; situacao?: string | string[] }>
+}
 
 // ?pagina=N: inteiro de 1 a 50; qualquer outro valor vale 1 (research §10).
 function lerPagina(parametro: string | string[] | undefined) {
@@ -26,10 +29,14 @@ function lerPagina(parametro: string | string[] | undefined) {
 export default async function ViagensPage({ searchParams }: Props) {
   // Defesa em profundidade: o proxy.ts já exige sessão.
   await obterUsuarioLogado()
-  const { pagina: parametro } = await searchParams
-  const pagina = lerPagina(parametro)
-  const { viagens, temMais } = await listarViagens('ativas', pagina * POR_PAGINA)
-  const de = pagina > 1 ? `pagina=${pagina}` : ''
+  const { pagina: parametroPagina, situacao: parametroSituacao } = await searchParams
+  const pagina = lerPagina(parametroPagina)
+  const situacao: SituacaoViagem = parametroSituacao === 'arquivadas' ? 'arquivadas' : 'ativas'
+  const { viagens, temMais } = await listarViagens(situacao, pagina * POR_PAGINA)
+  const consulta = new URLSearchParams()
+  if (situacao === 'arquivadas') consulta.set('situacao', 'arquivadas')
+  if (pagina > 1) consulta.set('pagina', String(pagina))
+  const de = consulta.toString()
 
   return (
     <div className="flex flex-col gap-6">
@@ -51,6 +58,7 @@ export default async function ViagensPage({ searchParams }: Props) {
         </div>
       </div>
       <ListaViagens
+        situacao={situacao}
         viagens={viagens}
         temMais={temMais && pagina < PAGINA_MAX}
         pagina={pagina}

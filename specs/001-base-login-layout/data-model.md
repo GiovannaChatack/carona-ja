@@ -98,6 +98,17 @@ histórico. Não há exclusão física se houver participações.
 
 ### `viagens` (slice 003: Viagens)
 
+> **Nota (slice 003)**: o modelo implementado está em
+> [`specs/003-registro-viagens/data-model.md`](../003-registro-viagens/data-model.md), que
+> diverge desta visão inicial:
+>
+> - criou a tabela `trajetos` (origem e destino);
+> - trocou `observacao` por `trajeto_id` e `sentido` (`ida` | `volta`);
+> - acrescentou `arquivada_em` (viagem desconsiderada em totais e pendências; sem exclusão pela
+>   interface);
+> - adiou `viagem_passageiros.pago_em` para o slice de Pagamentos;
+> - usa FKs compostas com `motorista_id` e `on delete no action` (no lugar de `restrict`).
+
 | Campo | Tipo | Regras |
 |-------|------|--------|
 | `id` | uuid | PK |
@@ -112,6 +123,11 @@ aplicação validada ao salvar).
 ### `viagem_passageiros` (slice 003 cria; slice 005 usa o pagamento)
 
 É a participação de um passageiro em uma viagem, e a unidade de cobrança e pagamento.
+
+> **Nota (slice 003)**: ver a nota de `viagens` acima e
+> [`specs/003-registro-viagens/data-model.md`](../003-registro-viagens/data-model.md). O
+> `pago_em` ainda não existe; as FKs são compostas (`(viagem_id, motorista_id)` com `on delete
+> cascade` e `(passageiro_id, motorista_id)` com `on delete no action`).
 
 | Campo | Tipo | Regras |
 |-------|------|--------|
