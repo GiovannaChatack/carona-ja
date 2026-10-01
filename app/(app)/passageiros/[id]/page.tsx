@@ -1,4 +1,4 @@
-import { ArrowLeft, Pencil } from 'lucide-react'
+import { ArrowLeft, History, Pencil } from 'lucide-react'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
@@ -103,6 +103,12 @@ export default async function PassageiroPage({ params, searchParams }: Props) {
           <Link href={`/passageiros/${passageiro.id}/editar`}>
             <Pencil data-icon="inline-start" aria-hidden />
             Editar
+          </Link>
+        </Button>
+        <Button asChild variant="outline">
+          <Link href={`/historico?passageiro=${passageiro.id}`}>
+            <History data-icon="inline-start" aria-hidden />
+            Ver histórico
           </Link>
         </Button>
         <AcoesPassageiro

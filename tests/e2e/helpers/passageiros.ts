@@ -158,3 +158,40 @@ export async function atualizarPassageiroPelaApi(id: string, campos: Record<stri
 
 // Nome antigo, mantido por compatibilidade.
 export const limparPassageirosDeTeste = limparDadosDeTeste
+
+// Edita uma viagem pela função SQL (slice 003), já confirmando a duplicidade.
+export async function editarViagemPelaApi({
+  viagemId,
+  trajetoId,
+  sentido,
+  dataHoraLocal,
+  participacoes,
+}: {
+  viagemId: string
+  trajetoId: string
+  sentido: 'ida' | 'volta'
+  dataHoraLocal: string
+  participacoes: { passageiro_id: string; valor_centavos: number }[]
+}) {
+  const supabase = await clienteDeTeste()
+  const { error } = await supabase.rpc('editar_viagem', {
+    p_viagem_id: viagemId,
+    p_trajeto_id: trajetoId,
+    p_sentido: sentido,
+    p_data_hora_local: dataHoraLocal,
+    p_participacoes: participacoes,
+    p_confirmar_duplicada: true,
+  })
+  if (error) throw error
+}
+
+// Arquiva uma viagem ou um trajeto de teste pela API.
+export async function arquivarPelaApi(tabela: 'viagens' | 'trajetos', id: string) {
+  const supabase = await clienteDeTeste()
+  const coluna = tabela === 'viagens' ? 'arquivada_em' : 'arquivado_em'
+  const { error } = await supabase
+    .from(tabela)
+    .update({ [coluna]: new Date().toISOString() })
+    .eq('id', id)
+  if (error) throw error
+}
