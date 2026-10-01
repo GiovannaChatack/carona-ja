@@ -538,7 +538,7 @@ arquivadas.
   - acrescentou `arquivada_em`;
   - adiou `pago_em` para o slice de Pagamentos;
   - usa FKs compostas com `on delete no action`
-- [ ] T065 Revisão de segurança (Princípio VI):
+- [X] T065 Revisão de segurança (Princípio VI):
   - buscar `service_role` no repositório (nenhum resultado fora de comentários/`.env.example`);
   - confirmar que nenhuma action lê `motorista_id` do formulário;
   - confirmar no painel que `registrar_viagem` e `editar_viagem` não podem ser executadas por `anon`;
@@ -549,15 +549,30 @@ arquivadas.
     `viagem_passageiros`, `viagens_resumo` e `passageiros`; `registrar_viagem` e `editar_viagem`
     negadas (`42501`). Cenário 26 aproximado com a conta de teste e ids que não são dela:
     `editar_viagem` → `CJ006` (viagem), `CJ002` (trajeto), `CJ003` (passageiro), além de `CJ004`
-    e `CJ005`; `insert` direto em `viagem_passageiros` → `23503`. **Pendente (manual)**: cenários
-    25 e 26 com a segunda conta real.
+    e `CJ005`; `insert` direto em `viagem_passageiros` → `23503`. **Não executado**: cenários 25
+    e 26 com uma segunda conta real (o agente não cria contas). O usuário decidiu encerrar o slice
+    assim; o isolamento entre contas fica coberto pela RLS e pelas verificações acima e deve ser
+    repetido com a segunda conta quando ela existir.
 - [X] T066 Commit em pt-BR, push na `main` e aguardar o deploy na Vercel
-- [ ] T067 Executar a validação completa do [quickstart.md](./quickstart.md) em produção (cenários 1–28, no celular e no desktop, com os tempos de SC-001 e SC-002 cronometrados) e registrar o resultado nesta tarefa
-  - **Parcial (2026-10-01)**: automatizados em produção, 104/104 e2e (mobile 360px e desktop
-    1280px) cobrem os cenários 1–24, além de 27 e 26 (aproximado, ver T065). **Pendentes
-    (manual)**: cronometrar SC-001 (registrar viagem < 30 s no celular) e SC-002 (trajeto < 30 s),
-    cenário 25 com a segunda conta e cenário 28 (sem rede), além de conferir 768 e 1920px.
-- [ ] T068 Marcar o slice como concluído: `**Status**: Concluído (<data>)` em `specs/003-registro-viagens/spec.md`; commit e push
+- [X] T067 Executar a validação completa do [quickstart.md](./quickstart.md) em produção (cenários 1–28, no celular e no desktop, com os tempos de SC-001 e SC-002 cronometrados) e registrar o resultado nesta tarefa
+  - **Resultado (2026-10-01)**: suíte e2e completa com `E2E_BASE_URL` de produção, mobile (360px) e
+    desktop (1280px): 104/104 no commit `11fec61` e 106/106 no `03ea835`, sempre na primeira
+    execução. Cobre os cenários 1–24, 27 e 28 e, aproximadamente, o 26 (ver T065).
+    - **Cenário 28 (sem rede)**: falhava. Sem rede, a chamada da action rejeitava no navegador e o
+      `error.tsx` substituía o formulário ("Não foi possível conectar"), perdendo o preenchido
+      (FR-025). Corrigido em `03ea835` com `lib/acoes-cliente.ts` (`tratarFalhaDeConexao`) nos
+      formulários de viagem e trajeto e nas ações de arquivar, reativar e excluir; novo e2e
+      "sem rede, a falha aparece…" aprovado em produção.
+    - **Cenário 24 em 768 e 1920px**: sem rolagem horizontal em `/viagens` (ativas e arquivadas),
+      `/viagens/nova`, detalhes e edição de viagem, e lista, novo, detalhes e edição de trajeto
+      (script pontual em produção).
+    - **SC-001/SC-002**: tempos de referência automatizados em produção (preenchimento por script,
+      do início do formulário ao toast): trajeto 1,6–2,6 s e viagem com 2 passageiros 3,0 s. O
+      tempo de uma pessoa no celular não foi cronometrado; a margem até 30 s é ampla.
+    - **Não executado**: cenário 25 (segunda conta), ver T065.
+    - **Observação**: os formulários de passageiros (slice 002) têm a mesma falha sem rede e
+      podem usar `tratarFalhaDeConexao` em uma correção futura.
+- [X] T068 Marcar o slice como concluído: `**Status**: Concluído (<data>)` em `specs/003-registro-viagens/spec.md`; commit e push
 
 **Checkpoint da Fatia D**: slice 003 concluído. O próximo passo é `/speckit-specify` do slice 004
 (Histórico).

@@ -4,7 +4,7 @@
 
 **Criado em**: 2026-09-30
 
-**Status**: Rascunho
+**Status**: Concluído (2026-10-01)
 
 **Entrada**: Descrição do usuário: "slice 3 viagens, essa spec deve definir a funcionalidade de
 gerencia e registro de trajetos e viagens feitas nesses trajetos, nao se preocupe com percurso ou
