@@ -4,7 +4,7 @@
 
 **Criado em**: 2026-10-01
 
-**Status**: Rascunho
+**Status**: Concluído (2026-10-01)
 
 **Entrada**: Descrição do usuário: "slice 04 historico, saiba que essa spec sera implementada em
 paralelo com a 005 de pagamentos, então essa spec precisa gerar tarefas para serem implementadas

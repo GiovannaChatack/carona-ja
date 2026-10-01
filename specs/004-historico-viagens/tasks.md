@@ -161,10 +161,10 @@ validação em produção pelo próprio e2e.
 - [X] T030 Commitar o slice na branch `feature/historico-viagens` (mensagem em pt-BR, padrão `feat: histórico de viagens (slice 004)`), com a migração, o código, os testes e os documentos.
 - [X] T031 Sincronizar com a `main`: `git fetch origin` e `git merge origin/main`. Se houver conflito (esperado só em `components/layout/nav-items.ts`, `app/(app)/passageiros/[id]/page.tsx`, `app/(app)/viagens/[id]/page.tsx`, `README.md`, [research.md §9](./research.md)), manter **as duas** mudanças. Se o merge trouxer a migração do slice 005 ainda não aplicada, rodar `npx supabase db push`.
 - [X] T032 Após o merge, repetir T027 e T028 (suíte completa); só seguir com tudo verde.
-- [ ] T033 Publicar: perguntar ao usuário antes (ação externa); com a confirmação, `git checkout main`, `git merge --no-ff feature/historico-viagens`, `git push origin main` e aguardar o deploy da Vercel (`gh run`/status do commit ou a página respondendo com o item "Histórico").
-- [ ] T034 Validar em produção sem passos manuais: rodar `npx playwright test tests/e2e/historico.spec.ts` com `E2E_BASE_URL=<url-produção>` (README, "testes contra a produção"); confirmar com `npx supabase migration list` que `<ts>_historico` está aplicada no remoto.
-- [ ] T035 [P] Marcar a spec como concluída: em `specs/004-historico-viagens/spec.md`, `**Status**: Concluído (<data>)`.
-- [ ] T036 Commitar a documentação final na `main` (`docs: conclui o slice 004`) e fazer push, após confirmação do usuário.
+- [X] T033 Publicar: perguntar ao usuário antes (ação externa); com a confirmação, `git checkout main`, `git merge --no-ff feature/historico-viagens`, `git push origin main` e aguardar o deploy da Vercel (`gh run`/status do commit ou a página respondendo com o item "Histórico").
+- [X] T034 Validar em produção sem passos manuais: rodar `npx playwright test tests/e2e/historico.spec.ts` com `E2E_BASE_URL=<url-produção>` (README, "testes contra a produção"); confirmar com `npx supabase migration list` que `<ts>_historico` está aplicada no remoto.
+- [X] T035 [P] Marcar a spec como concluída: em `specs/004-historico-viagens/spec.md`, `**Status**: Concluído (<data>)`.
+- [X] T036 Commitar a documentação final na `main` (`docs: conclui o slice 004`) e fazer push, após confirmação do usuário.
 
 ---
 
