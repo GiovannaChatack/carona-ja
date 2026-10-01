@@ -78,3 +78,8 @@ export function paraCampoDataHora(valor: Instante) {
   )
   return `${partes.year}-${partes.month}-${partes.day}T${partes.hour}:${partes.minute}`
 }
+
+// Data de hoje em São Paulo, "AAAA-MM-DD", independentemente do fuso do servidor.
+export function hojeEmSaoPaulo(agora: Date = new Date()) {
+  return paraCampoDataHora(agora).slice(0, 10)
+}

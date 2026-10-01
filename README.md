@@ -12,7 +12,9 @@ A documentação de cada funcionalidade fica em [`specs/`](./specs/). Slices con
 - [001 — Base do projeto](./specs/001-base-login-layout/spec.md);
 - [002 — Registro de passageiros](./specs/002-registro-passageiros/spec.md);
 - [003 — Trajetos e registro de viagens](./specs/003-registro-viagens/spec.md): item de
-  navegação "Viagens" (`/viagens`), com os trajetos em `/viagens/trajetos`.
+  navegação "Viagens" (`/viagens`), com os trajetos em `/viagens/trajetos`;
+- [004 — Histórico de viagens](./specs/004-historico-viagens/spec.md): item de navegação
+  "Histórico" (`/historico`).
 
 ## Pré-requisitos
 
@@ -260,6 +262,14 @@ que a action traduz para a mensagem no campo certo:
 
 Modelos: `registrar_viagem` e `editar_viagem` em
 [`supabase/migrations/`](./supabase/migrations/).
+
+### Funções de consulta do histórico (slice 004)
+
+`historico_viagens` (linhas) e `historico_resumo` (quantidade e total) são somente leitura,
+`security invoker` (valem as RLS das tabelas) e executáveis só por `authenticated`. Recebem o
+período como datas do calendário de São Paulo (`p_inicio`/`p_fim`, inclusivas) e aplicam o
+mesmo filtro, então o resumo sempre bate com a soma das linhas. Ver
+[`specs/004-historico-viagens/data-model.md`](./specs/004-historico-viagens/data-model.md).
 
 ### Viagens arquivadas não entram em totais
 

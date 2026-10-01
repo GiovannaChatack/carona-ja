@@ -7,6 +7,7 @@ import {
   formatMonth,
   formatPhone,
   formatTime,
+  hojeEmSaoPaulo,
   paraCampoDataHora,
 } from '@/lib/format'
 
@@ -75,5 +76,19 @@ describe('paraCampoDataHora', () => {
 
   it('meia-noite local sai como 00, não 24', () => {
     expect(paraCampoDataHora('2026-09-30T03:00:00Z')).toBe('2026-09-30T00:00')
+  })
+})
+
+describe('hojeEmSaoPaulo', () => {
+  it('ainda é o dia anterior às 02:30 UTC', () => {
+    expect(hojeEmSaoPaulo(new Date('2026-10-01T02:30:00Z'))).toBe('2026-09-30')
+  })
+
+  it('vira o dia às 03:00 UTC (meia-noite em São Paulo)', () => {
+    expect(hojeEmSaoPaulo(new Date('2026-10-01T03:00:00Z'))).toBe('2026-10-01')
+  })
+
+  it('usa o ano local na virada do ano', () => {
+    expect(hojeEmSaoPaulo(new Date('2026-01-01T02:59:00Z'))).toBe('2025-12-31')
   })
 })

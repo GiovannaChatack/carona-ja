@@ -1,4 +1,4 @@
-import { Car, House, Users, type LucideIcon } from 'lucide-react'
+import { Car, History, House, Users, type LucideIcon } from 'lucide-react'
 
 export type NavItem = { rotulo: string; href: string; icone: LucideIcon }
 
@@ -8,6 +8,7 @@ export const navItems: NavItem[] = [
   { rotulo: 'Início', href: '/inicio', icone: House },
   { rotulo: 'Passageiros', href: '/passageiros', icone: Users },
   { rotulo: 'Viagens', href: '/viagens', icone: Car },
+  { rotulo: 'Histórico', href: '/historico', icone: History },
 ]
 
 export function itemAtivo(pathname: string, href: string) {

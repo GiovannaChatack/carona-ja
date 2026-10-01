@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { obterUsuarioLogado } from '@/lib/auth/sessao'
 import { formatCurrency, formatDate, formatDateTime } from '@/lib/format'
+import { lerFiltros, paraQuery } from '@/lib/historico/filtros'
 import { rotuloTrajeto } from '@/lib/trajetos/validacao'
 import { obterViagem } from '@/lib/viagens/consultas'
 import { percurso } from '@/lib/viagens/validacao'
@@ -18,7 +19,7 @@ import { AcoesViagem } from './acoes-viagem'
 
 type Props = {
   params: Promise<{ id: string }>
-  searchParams: Promise<{ de?: string | string[] }>
+  searchParams: Promise<{ de?: string | string[]; volta?: string | string[] }>
 }
 
 export async function generateMetadata({ params }: Pick<Props, 'params'>): Promise<Metadata> {
@@ -32,7 +33,12 @@ export async function generateMetadata({ params }: Pick<Props, 'params'>): Promi
 }
 
 // Repassa só situacao e pagina: qualquer outro parâmetro de ?de= é descartado.
-function hrefDeVolta(de: string | string[] | undefined) {
+// Com ?volta=historico, volta ao histórico com os filtros conhecidos (slice 004).
+function hrefDeVolta(de: string | string[] | undefined, destino?: string | string[]) {
+  if (destino === 'historico') {
+    const q = paraQuery(lerFiltros(new URLSearchParams(typeof de === 'string' ? de : '')).filtro)
+    return q ? `/historico?${q}` : '/historico'
+  }
   const origem = new URLSearchParams(typeof de === 'string' ? de : '')
   const volta = new URLSearchParams()
   for (const chave of ['situacao', 'pagina']) {
@@ -46,7 +52,7 @@ function hrefDeVolta(de: string | string[] | undefined) {
 export default async function ViagemPage({ params, searchParams }: Props) {
   await obterUsuarioLogado()
   const { id } = await params
-  const { de } = await searchParams
+  const { de, volta } = await searchParams
   const dados = await obterViagem(id)
   if (!dados) notFound()
 
@@ -62,11 +68,11 @@ export default async function ViagemPage({ params, searchParams }: Props) {
   return (
     <div className="flex w-full max-w-lg flex-col gap-6">
       <Link
-        href={hrefDeVolta(de)}
+        href={hrefDeVolta(de, volta)}
         className="inline-flex w-fit items-center gap-1 text-sm text-muted-foreground underline-offset-4 hover:underline"
       >
         <ArrowLeft className="size-4" aria-hidden />
-        Viagens
+        {volta === 'historico' ? 'Histórico' : 'Viagens'}
       </Link>
       <h1 className="text-2xl font-semibold break-words">
         {`${sentido}: ${percurso(viagem, viagem.sentido)}`}
