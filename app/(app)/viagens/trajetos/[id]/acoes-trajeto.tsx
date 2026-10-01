@@ -5,16 +5,28 @@ import { startTransition, useActionState } from 'react'
 
 import { ConfirmDialog } from '@/components/confirm-dialog'
 import { Button } from '@/components/ui/button'
+import { ERRO_CONEXAO, tratarFalhaDeConexao } from '@/lib/acoes-cliente'
 
 import { arquivarTrajeto, excluirTrajeto, reativarTrajeto } from '../actions'
 
 type Props = { id: string; rotulo: string; arquivado: boolean }
 
+const semConexao = () => ({ erro: ERRO_CONEXAO })
+
 // Arquivar, reativar e excluir; o sucesso redireciona (o AvisoUrl mostra o toast).
 export function AcoesTrajeto({ id, rotulo, arquivado }: Props) {
-  const [estadoArquivar, arquivar, arquivando] = useActionState(arquivarTrajeto.bind(null, id), {})
-  const [estadoReativar, reativar, reativando] = useActionState(reativarTrajeto.bind(null, id), {})
-  const [estadoExcluir, excluir, excluindo] = useActionState(excluirTrajeto.bind(null, id), {})
+  const [estadoArquivar, arquivar, arquivando] = useActionState(
+    tratarFalhaDeConexao(arquivarTrajeto.bind(null, id), semConexao),
+    {},
+  )
+  const [estadoReativar, reativar, reativando] = useActionState(
+    tratarFalhaDeConexao(reativarTrajeto.bind(null, id), semConexao),
+    {},
+  )
+  const [estadoExcluir, excluir, excluindo] = useActionState(
+    tratarFalhaDeConexao(excluirTrajeto.bind(null, id), semConexao),
+    {},
+  )
   const pendente = arquivando || reativando || excluindo
   const erro = estadoArquivar.erro ?? estadoReativar.erro ?? estadoExcluir.erro
 

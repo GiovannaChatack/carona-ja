@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { ERRO_CONEXAO, tratarFalhaDeConexao } from '@/lib/acoes-cliente'
 import { formatCurrency } from '@/lib/format'
 import type { Trajeto } from '@/lib/trajetos/tipos'
 import { rotuloTrajeto } from '@/lib/trajetos/validacao'
@@ -66,7 +67,11 @@ export function FormularioViagem({
   textoDuplicada = 'Registrar',
   hrefCancelar,
 }: FormularioViagemProps) {
-  const [estado, enviar, pendente] = useActionState(acao, estadoInicial)
+  // O formulário é controlado: na falha de conexão, o que foi preenchido continua na tela.
+  const [estado, enviar, pendente] = useActionState(
+    tratarFalhaDeConexao(acao, () => ({ erro: ERRO_CONEXAO })),
+    estadoInicial,
+  )
   const confirmarRef = useRef<HTMLInputElement>(null)
   const formRef = useRef<HTMLFormElement>(null)
 

@@ -5,15 +5,24 @@ import { startTransition, useActionState } from 'react'
 
 import { ConfirmDialog } from '@/components/confirm-dialog'
 import { Button } from '@/components/ui/button'
+import { ERRO_CONEXAO, tratarFalhaDeConexao } from '@/lib/acoes-cliente'
 
 import { arquivarViagem, reativarViagem } from '../actions'
 
 type Props = { id: string; dataFormatada: string; arquivada: boolean }
 
+const semConexao = () => ({ erro: ERRO_CONEXAO })
+
 // Arquivar e reativar; o sucesso redireciona (o AvisoUrl mostra o toast).
 export function AcoesViagem({ id, dataFormatada, arquivada }: Props) {
-  const [estadoArquivar, arquivar, arquivando] = useActionState(arquivarViagem.bind(null, id), {})
-  const [estadoReativar, reativar, reativando] = useActionState(reativarViagem.bind(null, id), {})
+  const [estadoArquivar, arquivar, arquivando] = useActionState(
+    tratarFalhaDeConexao(arquivarViagem.bind(null, id), semConexao),
+    {},
+  )
+  const [estadoReativar, reativar, reativando] = useActionState(
+    tratarFalhaDeConexao(reativarViagem.bind(null, id), semConexao),
+    {},
+  )
   const pendente = arquivando || reativando
   const erro = estadoArquivar.erro ?? estadoReativar.erro
 

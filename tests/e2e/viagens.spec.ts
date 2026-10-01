@@ -11,6 +11,8 @@ import {
   type Cenario,
 } from './helpers/passageiros'
 
+const ERRO_CONEXAO = 'Não foi possível salvar. Tente novamente.'
+
 const ERRO_VALOR = 'Informe um valor entre R$ 0,00 e R$ 9.999,99, com até 2 casas decimais.'
 
 // Dois passageiros (R$ 12,00 e R$ 10,00) e um trajeto, criados pela API.
@@ -513,6 +515,49 @@ test.describe('US5 – arquivar e reativar viagem', () => {
     await expect(page.getByRole('link', { name: 'Editar' })).toBeVisible()
     await page.goto('/viagens')
     await expect(meus()).toHaveCount(2)
+  })
+
+  test('sem rede, a falha aparece e nada do que foi preenchido se perde (FR-025)', async ({
+    page,
+    context,
+  }) => {
+    const c = await novoCenario()
+    const [ana] = c.passageiros
+    const id = await registrarViagemPelaApi({
+      trajetoId: c.trajeto.id,
+      sentido: 'ida',
+      dataHoraLocal: '2021-08-01T08:00',
+      participacoes: [{ passageiro_id: ana.id, valor_centavos: 1200 }],
+    })
+    const erro = page.getByRole('alert').filter({ hasText: ERRO_CONEXAO })
+
+    // Formulário de viagem.
+    await entrarComContaDeTeste(page, '/viagens/nova')
+    await preencher(page, { ...c, passageiros: [ana] }, 'Volta')
+    await page.getByLabel(`Valor de ${ana.nome}`).fill('7')
+    await context.setOffline(true)
+    await page.getByRole('button', { name: 'Registrar viagem' }).click()
+    await expect(erro).toBeVisible()
+    await expect(page.getByLabel(`Valor de ${ana.nome}`)).toHaveValue('7')
+    await expect(page.getByRole('radio', { name: 'Volta' })).toBeChecked()
+    await context.setOffline(false)
+
+    // Arquivar viagem.
+    await page.goto(`/viagens/${id}`)
+    await context.setOffline(true)
+    await page.getByRole('button', { name: 'Arquivar' }).click()
+    await dialogo(page).getByRole('button', { name: 'Arquivar' }).click()
+    await expect(erro).toBeVisible()
+    await context.setOffline(false)
+
+    // Formulário de trajeto.
+    await page.goto(`/viagens/trajetos/${c.trajeto.id}/editar`)
+    await page.getByLabel('Origem').fill(`${c.trajeto.origem} X`)
+    await context.setOffline(true)
+    await page.getByRole('button', { name: 'Salvar' }).click()
+    await expect(erro).toBeVisible()
+    await expect(page.getByLabel('Origem')).toHaveValue(`${c.trajeto.origem} X`)
+    await context.setOffline(false)
   })
 
   test('filtro de arquivadas sem rolagem horizontal', async ({ page }) => {

@@ -6,6 +6,7 @@ import { useActionState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { ERRO_CONEXAO, tratarFalhaDeConexao } from '@/lib/acoes-cliente'
 import type { CamposTrajeto, EstadoFormularioTrajeto } from '@/lib/trajetos/tipos'
 
 type FormularioTrajetoProps = {
@@ -29,7 +30,16 @@ export function FormularioTrajeto({
   textoEnviar,
   hrefCancelar,
 }: FormularioTrajetoProps) {
-  const [estado, enviar, pendente] = useActionState(acao, estadoInicial)
+  const [estado, enviar, pendente] = useActionState(
+    tratarFalhaDeConexao(acao, (formData: FormData) => ({
+      erro: ERRO_CONEXAO,
+      valores: {
+        origem: String(formData.get('origem') ?? ''),
+        destino: String(formData.get('destino') ?? ''),
+      },
+    })),
+    estadoInicial,
+  )
   const erros = estado.errosCampo ?? {}
 
   return (
