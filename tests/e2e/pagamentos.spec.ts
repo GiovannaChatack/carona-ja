@@ -305,6 +305,88 @@ test.describe('pagamentos', () => {
       await expect(itensDaSecao(page, 'Pagas').first()).toContainText(`Pago em ${dataBR(hoje)}`)
     })
 
+    test.describe('US4 – desfazer e corrigir a data', () => {
+      test('alterar a data do pagamento (FR-012)', async ({ page }) => {
+        const { p, ida } = await cenario()
+        await marcarPagoPelaApi([(await participacao(ida, p.id)).id], hoje)
+
+        await entrarComContaDeTeste(page, `/pagamentos/${p.id}`)
+        const paga = itensDaSecao(page, 'Pagas').first()
+        await paga.getByRole('button', { name: 'Alterar data' }).click()
+        const dialogo = page.getByRole('alertdialog')
+        await expect(dialogo).toContainText('Alterar data do pagamento')
+        await expect(dialogo.getByLabel('Data do pagamento')).toHaveValue(hoje)
+
+        await dialogo.getByLabel('Data do pagamento').fill('2025-09-27')
+        await dialogo.getByRole('button', { name: 'Salvar' }).click()
+        await expect(
+          dialogo.getByText('A data do pagamento não pode ser anterior à data da viagem.'),
+        ).toBeVisible()
+
+        await dialogo.getByLabel('Data do pagamento').fill(ontem)
+        await dialogo.getByRole('button', { name: 'Salvar' }).click()
+        await expect(page.getByText('Data do pagamento alterada')).toBeVisible()
+        await expect(dialogo).toBeHidden()
+        await expect(itensDaSecao(page, 'Pagas').first()).toContainText(
+          `Pago em ${dataBR(ontem)}`,
+        )
+        expect((await participacao(ida, p.id)).pago_em).toBe(ontem)
+      })
+
+      test('desfazer o pagamento; cancelar não muda nada (FR-012)', async ({ page }) => {
+        const { p, ida } = await cenario()
+        await marcarPagoPelaApi([(await participacao(ida, p.id)).id], hoje)
+
+        await entrarComContaDeTeste(page, `/pagamentos/${p.id}`)
+        await expect(totalDevido(page)).toHaveText(/R\$\s10,00/)
+        const paga = itensDaSecao(page, 'Pagas').first()
+
+        await paga.getByRole('button', { name: 'Desfazer' }).click()
+        await page.getByRole('alertdialog').getByRole('button', { name: 'Cancelar' }).click()
+        await expect(page.getByRole('alertdialog')).toBeHidden()
+        await expect(itensDaSecao(page, 'Pagas')).toHaveCount(1)
+        expect((await participacao(ida, p.id)).pago_em).toBe(hoje)
+
+        await paga.getByRole('button', { name: 'Desfazer' }).click()
+        const dialogo = page.getByRole('alertdialog')
+        await expect(dialogo).toContainText('Desfazer pagamento?')
+        await expect(dialogo).toContainText('A viagem de 28/09/2025 volta a ficar pendente.')
+        await dialogo.getByRole('button', { name: 'Desfazer' }).click()
+
+        await expect(page.getByText('Pagamento desfeito')).toBeVisible()
+        await expect(totalDevido(page)).toHaveText(/R\$\s20,00/)
+        await expect(itensDaSecao(page, 'Pendentes')).toHaveCount(2)
+        await expect(page.getByText('Nenhum pagamento registrado.')).toBeVisible()
+        expect((await participacao(ida, p.id)).pago_em).toBeNull()
+      })
+
+      test('"Carregar mais" nas pagas', async ({ page }) => {
+        const c = await prepararCenario({
+          passageiros: [{ base: 'Muitas', valorCentavos: 500 }],
+          trajeto: { origemBase: 'Casa', destino: 'Faculdade' },
+        })
+        const [p] = c.passageiros
+        const ids: string[] = []
+        for (let dia = 1; dia <= 21; dia++) {
+          const viagem = await registrarViagemPelaApi({
+            trajetoId: c.trajeto.id,
+            sentido: 'ida',
+            dataHoraLocal: `2025-08-${String(dia).padStart(2, '0')}T07:00`,
+            participacoes: [{ passageiro_id: p.id, valor_centavos: 500 }],
+          })
+          ids.push((await participacao(viagem, p.id)).id)
+        }
+        await marcarPagoPelaApi(ids, hoje)
+
+        await entrarComContaDeTeste(page, `/pagamentos/${p.id}`)
+        await expect(itensDaSecao(page, 'Pagas')).toHaveCount(20)
+        await page.getByRole('link', { name: 'Carregar mais' }).click()
+        await expect(page).toHaveURL(new RegExp(`/pagamentos/${p.id}\\?pagas=40$`))
+        await expect(itensDaSecao(page, 'Pagas')).toHaveCount(21)
+        await expect(page.getByRole('link', { name: 'Carregar mais' })).toHaveCount(0)
+      })
+    })
+
     test('telas de pagamentos sem rolagem horizontal (SC-008)', async ({ page }) => {
       const { p } = await cenario()
 
