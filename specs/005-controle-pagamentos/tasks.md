@@ -234,13 +234,13 @@ cobrança depende da chave.
 
 **Teste independente**: cenário de T039.
 
-- [ ] T036 [US5] Acrescentar a `app/(app)/pagamentos/actions.ts` `marcarPagamentoNaViagem(viagemId, participacaoId, estado, formData)`: mesma validação e `update` de `marcarPagamentos` para um id, filtrando também `.eq('viagem_id', viagemId)`; revalida `/viagens/{viagemId}` além das rotas de T017 (o `passageiro_id` vem do retorno `.select('id, passageiro_id')`); `sucesso` "Pagamento registrado".
-- [ ] T037 [P] [US5] Criar `app/(app)/viagens/[id]/marcar-pagamento.tsx` (`'use client'`): botão "Marcar como pago" (alvo ≥ 44px) que abre `AlertDialog` "Marcar pagamento de {nome}" com `<input type="date" name="data">` (padrão e `max` hoje, `min` o dia da viagem), "Cancelar"/"Confirmar", erros no diálogo e `toast.success` no sucesso; `tratarFalhaDeConexao`.
-- [ ] T038 [US5] Em `app/(app)/viagens/[id]/page.tsx`, na lista de passageiros, mostrar ao lado do valor um `Badge`: "Pago em DD/MM/AAAA" (`formatDataCampo`), "Pendente" (`variant="outline"`) ou "Sem cobrança" (valor 0); em viagem ativa, os pendentes com valor > 0 ganham `MarcarPagamento` (`hojeEmSaoPaulo()` e o dia da viagem por `paraCampoDataHora(realizada_em).slice(0, 10)`). Itens quebram em duas linhas no celular sem rolagem horizontal; não alterar `hrefDeVolta` (slice 004).
+- [X] T036 [US5] Acrescentar a `app/(app)/pagamentos/actions.ts` `marcarPagamentoNaViagem(viagemId, participacaoId, estado, formData)`: mesma validação e `update` de `marcarPagamentos` para um id, filtrando também `.eq('viagem_id', viagemId)`; revalida `/viagens/{viagemId}` além das rotas de T017 (o `passageiro_id` vem do retorno `.select('id, passageiro_id')`); `sucesso` "Pagamento registrado".
+- [X] T037 [P] [US5] Criar `app/(app)/viagens/[id]/marcar-pagamento.tsx` (`'use client'`): botão "Marcar como pago" (alvo ≥ 44px) que abre `AlertDialog` "Marcar pagamento de {nome}" com `<input type="date" name="data">` (padrão e `max` hoje, `min` o dia da viagem), "Cancelar"/"Confirmar", erros no diálogo e `toast.success` no sucesso; `tratarFalhaDeConexao`.
+- [X] T038 [US5] Em `app/(app)/viagens/[id]/page.tsx`, na lista de passageiros, mostrar ao lado do valor um `Badge`: "Pago em DD/MM/AAAA" (`formatDataCampo`), "Pendente" (`variant="outline"`) ou "Sem cobrança" (valor 0); em viagem ativa, os pendentes com valor > 0 ganham `MarcarPagamento` (`hojeEmSaoPaulo()` e o dia da viagem por `paraCampoDataHora(realizada_em).slice(0, 10)`). Itens quebram em duas linhas no celular sem rolagem horizontal; não alterar `hrefDeVolta` (slice 004).
 
 ### Testes
 
-- [ ] T039 [US5] Acrescentar a `tests/e2e/pagamentos.spec.ts`: (15) viagem com dois passageiros de teste (R$ 10,00 e R$ 0,00) e um terceiro pago pela API → badges "Pendente", "Sem cobrança" e "Pago em …"; "Marcar como pago" no pendente com hoje → toast "Pagamento registrado", badge "Pago em" hoje e o passageiro sem essa viagem em `/pagamentos/{id}`; viagem arquivada não mostra o botão (US5, FR-014); (16) detalhes da viagem sem rolagem horizontal.
+- [X] T039 [US5] Acrescentar a `tests/e2e/pagamentos.spec.ts`: (15) viagem com dois passageiros de teste (R$ 10,00 e R$ 0,00) e um terceiro pago pela API → badges "Pendente", "Sem cobrança" e "Pago em …"; "Marcar como pago" no pendente com hoje → toast "Pagamento registrado", badge "Pago em" hoje e o passageiro sem essa viagem em `/pagamentos/{id}`; viagem arquivada não mostra o botão (US5, FR-014); (16) detalhes da viagem sem rolagem horizontal.
 
 **Checkpoint**: todas as histórias completas.
 

@@ -18,8 +18,7 @@ export default async function ChavePixPage({ searchParams }: Props) {
   await obterUsuarioLogado()
   const { voltar: parametroVoltar, aviso } = await searchParams
   // ?voltar= só no formato /pagamentos/<uuid>/cobrar (FR-026).
-  const voltar =
-    typeof parametroVoltar === 'string' ? caminhoVoltarSeguro(parametroVoltar) : null
+  const voltar = typeof parametroVoltar === 'string' ? caminhoVoltarSeguro(parametroVoltar) : null
   const chaveAtual = await obterChavePix()
 
   return (

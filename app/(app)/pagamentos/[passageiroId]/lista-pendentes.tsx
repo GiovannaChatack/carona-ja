@@ -37,11 +37,17 @@ function viagens(n: number) {
 // Pendências do passageiro: seleção com data (rodapé fixo) e "Recebi tudo" (FR-007, FR-008).
 export function ListaPendentes({ passageiroId, pendentes, hoje }: Props) {
   const [estadoMarcar, marcar, marcando] = useActionState(
-    tratarFalhaDeConexao<EstadoPagamento, [FormData]>(marcarPagamentos.bind(null, passageiroId), semConexao),
+    tratarFalhaDeConexao<EstadoPagamento, [FormData]>(
+      marcarPagamentos.bind(null, passageiroId),
+      semConexao,
+    ),
     estadoInicial,
   )
   const [estadoReceber, receber, recebendo] = useActionState(
-    tratarFalhaDeConexao<EstadoPagamento, [FormData]>(receberTudo.bind(null, passageiroId), semConexao),
+    tratarFalhaDeConexao<EstadoPagamento, [FormData]>(
+      receberTudo.bind(null, passageiroId),
+      semConexao,
+    ),
     estadoInicial,
   )
   const pendente = marcando || recebendo
@@ -159,8 +165,8 @@ export function ListaPendentes({ passageiroId, pendentes, hoje }: Props) {
         // Rodapé fixo; no celular, acima da BottomNav (h-14).
         <div className="sticky bottom-[calc(3.5rem+env(safe-area-inset-bottom))] z-30 -mx-4 flex flex-col gap-3 border-t bg-background px-4 py-3 sm:flex-row sm:items-end sm:justify-between md:bottom-0">
           <p className="font-medium" aria-live="polite">
-            {selecionadas.length === 1 ? '1 selecionada' : `${selecionadas.length} selecionadas`}{' '}
-            · {formatCurrency(totalItens(selecionadas))}
+            {selecionadas.length === 1 ? '1 selecionada' : `${selecionadas.length} selecionadas`} ·{' '}
+            {formatCurrency(totalItens(selecionadas))}
           </p>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
             <div className="flex flex-col gap-2">

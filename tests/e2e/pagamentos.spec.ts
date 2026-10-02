@@ -278,9 +278,7 @@ test.describe('pagamentos', () => {
       expect(depois.valor_centavos).toBe(1000)
     })
 
-    test('arquivar viagem com pagamentos pede confirmação reforçada (FR-024)', async ({
-      page,
-    }) => {
+    test('arquivar viagem com pagamentos pede confirmação reforçada (FR-024)', async ({ page }) => {
       const { p, ida } = await cenario()
       await marcarPagoPelaApi([(await participacao(ida, p.id)).id], hoje)
 
@@ -327,9 +325,7 @@ test.describe('pagamentos', () => {
         await dialogo.getByRole('button', { name: 'Salvar' }).click()
         await expect(page.getByText('Data do pagamento alterada')).toBeVisible()
         await expect(dialogo).toBeHidden()
-        await expect(itensDaSecao(page, 'Pagas').first()).toContainText(
-          `Pago em ${dataBR(ontem)}`,
-        )
+        await expect(itensDaSecao(page, 'Pagas').first()).toContainText(`Pago em ${dataBR(ontem)}`)
         expect((await participacao(ida, p.id)).pago_em).toBe(ontem)
       })
 
@@ -387,6 +383,51 @@ test.describe('pagamentos', () => {
       })
     })
 
+    test.describe('US5 – situação de pagamento na viagem', () => {
+      test('situação por passageiro e "Marcar como pago" (FR-014)', async ({ page }) => {
+        const { c, p, ida, volta } = await cenario([
+          { base: 'Zero', valorCentavos: 0 },
+          { base: 'Pago', valorCentavos: 1000 },
+        ])
+        const [, zero, pago] = c.passageiros
+        await marcarPagoPelaApi([(await participacao(ida, pago.id)).id], hoje)
+        await arquivarPelaApi('viagens', volta)
+
+        await entrarComContaDeTeste(page, `/viagens/${ida}`)
+        const linha = (nome: string) => page.locator('main li').filter({ hasText: nome })
+        await expect(linha(p.nome)).toContainText('Pendente')
+        await expect(linha(zero.nome)).toContainText('Sem cobrança')
+        await expect(
+          linha(zero.nome).getByRole('button', { name: 'Marcar como pago' }),
+        ).toHaveCount(0)
+        await expect(linha(pago.nome)).toContainText(`Pago em ${dataBR(hoje)}`)
+        await expect(
+          linha(pago.nome).getByRole('button', { name: 'Marcar como pago' }),
+        ).toHaveCount(0)
+        expect(await semRolagemHorizontal(page)).toBe(true)
+
+        await linha(p.nome).getByRole('button', { name: 'Marcar como pago' }).click()
+        const dialogo = page.getByRole('alertdialog')
+        await expect(dialogo).toContainText(`Marcar pagamento de ${p.nome}`)
+        await expect(dialogo.getByLabel('Data do pagamento')).toHaveValue(hoje)
+        await dialogo.getByRole('button', { name: 'Confirmar' }).click()
+
+        await expect(page.getByText('Pagamento registrado')).toBeVisible()
+        await expect(linha(p.nome)).toContainText(`Pago em ${dataBR(hoje)}`)
+        await expect(page.getByRole('button', { name: 'Marcar como pago' })).toHaveCount(0)
+
+        await page.goto(`/pagamentos/${p.id}`)
+        // A Volta está arquivada e a Ida foi paga: nada pendente.
+        await expect(page.getByText('Nenhum valor pendente')).toBeVisible()
+        await expect(itensDaSecao(page, 'Pagas')).toHaveCount(1)
+
+        await page.goto(`/viagens/${volta}`)
+        await expect(linha(p.nome)).toContainText('Pendente')
+        await expect(page.getByRole('button', { name: 'Marcar como pago' })).toHaveCount(0)
+        expect(await semRolagemHorizontal(page)).toBe(true)
+      })
+    })
+
     test('telas de pagamentos sem rolagem horizontal (SC-008)', async ({ page }) => {
       const { p } = await cenario()
 
@@ -399,4 +440,3 @@ test.describe('pagamentos', () => {
     })
   })
 })
-

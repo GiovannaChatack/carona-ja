@@ -102,10 +102,7 @@ export function Cobranca({ nome, telefone, chavePix, itens }: Props) {
           target="_blank"
           rel="noopener noreferrer"
           aria-disabled={vazio ? true : undefined}
-          className={cn(
-            buttonVariants({ size: 'lg' }),
-            vazio && 'pointer-events-none opacity-50',
-          )}
+          className={cn(buttonVariants({ size: 'lg' }), vazio && 'pointer-events-none opacity-50')}
         >
           <MessageCircle data-icon="inline-start" aria-hidden />
           Abrir no WhatsApp

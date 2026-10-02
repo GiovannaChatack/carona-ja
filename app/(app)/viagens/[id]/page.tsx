@@ -9,13 +9,21 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { obterUsuarioLogado } from '@/lib/auth/sessao'
-import { formatCurrency, formatDate, formatDateTime } from '@/lib/format'
+import {
+  formatCurrency,
+  formatDataCampo,
+  formatDate,
+  formatDateTime,
+  hojeEmSaoPaulo,
+  paraCampoDataHora,
+} from '@/lib/format'
 import { lerFiltros, paraQuery } from '@/lib/historico/filtros'
 import { rotuloTrajeto } from '@/lib/trajetos/validacao'
 import { obterViagem } from '@/lib/viagens/consultas'
 import { percurso } from '@/lib/viagens/validacao'
 
 import { AcoesViagem } from './acoes-viagem'
+import { MarcarPagamento } from './marcar-pagamento'
 
 type Props = {
   params: Promise<{ id: string }>
@@ -59,6 +67,8 @@ export default async function ViagemPage({ params, searchParams }: Props) {
   const { viagem, participacoes } = dados
   const arquivada = viagem.arquivada_em !== null
   const sentido = viagem.sentido === 'ida' ? 'Ida' : 'Volta'
+  const hoje = hojeEmSaoPaulo()
+  const diaViagem = paraCampoDataHora(viagem.realizada_em).slice(0, 10)
   const itens: [string, React.ReactNode][] = [
     ['Data e hora', formatDateTime(viagem.realizada_em)],
     ['Trajeto', `${rotuloTrajeto(viagem)}${viagem.trajeto_arquivado_em ? ' (arquivado)' : ''}`],
@@ -102,14 +112,35 @@ export default async function ViagemPage({ params, searchParams }: Props) {
           <CardContent>
             <ul className="flex flex-col divide-y text-sm">
               {participacoes.map((p) => (
-                <li key={p.id} className="flex items-center justify-between gap-3 py-2">
-                  <span className="flex min-w-0 flex-wrap items-center gap-2">
-                    <span className="break-words">{p.passageiro.nome}</span>
-                    {p.passageiro.arquivado_em && <Badge variant="secondary">Arquivado</Badge>}
-                  </span>
-                  <span className="shrink-0 whitespace-nowrap">
-                    {formatCurrency(p.valor_centavos)}
-                  </span>
+                <li key={p.id} className="flex flex-col gap-2 py-2">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="flex min-w-0 flex-wrap items-center gap-2">
+                      <span className="break-words">{p.passageiro.nome}</span>
+                      {p.passageiro.arquivado_em && <Badge variant="secondary">Arquivado</Badge>}
+                    </span>
+                    <span className="shrink-0 whitespace-nowrap">
+                      {formatCurrency(p.valor_centavos)}
+                    </span>
+                  </div>
+                  {/* Situação do pagamento (FR-014). */}
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    {p.pago_em ? (
+                      <Badge>Pago em {formatDataCampo(p.pago_em)}</Badge>
+                    ) : p.valor_centavos === 0 ? (
+                      <Badge variant="secondary">Sem cobrança</Badge>
+                    ) : (
+                      <Badge variant="outline">Pendente</Badge>
+                    )}
+                    {!arquivada && !p.pago_em && p.valor_centavos > 0 && (
+                      <MarcarPagamento
+                        viagemId={viagem.id}
+                        participacaoId={p.id}
+                        nome={p.passageiro.nome}
+                        hoje={hoje}
+                        diaViagem={diaViagem}
+                      />
+                    )}
+                  </div>
                 </li>
               ))}
             </ul>
