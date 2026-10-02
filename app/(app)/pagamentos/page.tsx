@@ -1,4 +1,4 @@
-import { Wallet } from 'lucide-react'
+import { Settings, Wallet } from 'lucide-react'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { Suspense } from 'react'
@@ -7,6 +7,7 @@ import { AvisoUrl } from '@/components/aviso-url'
 import { EmptyState } from '@/components/empty-state'
 import { ResponsiveTable, type Coluna } from '@/components/responsive-table'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { obterUsuarioLogado } from '@/lib/auth/sessao'
 import { formatCurrency } from '@/lib/format'
@@ -62,6 +63,12 @@ export default async function PagamentosPage() {
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-semibold">Pagamentos</h1>
+        <Button asChild variant="outline">
+          <Link href="/pagamentos/configuracoes">
+            <Settings data-icon="inline-start" aria-hidden />
+            Chave PIX
+          </Link>
+        </Button>
       </div>
       <Card>
         <CardContent className="flex flex-col gap-1">
