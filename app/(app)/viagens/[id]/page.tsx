@@ -133,6 +133,7 @@ export default async function ViagemPage({ params, searchParams }: Props) {
           id={viagem.id}
           dataFormatada={formatDate(viagem.realizada_em)}
           arquivada={arquivada}
+          pagas={participacoes.filter((p) => p.pago_em).length}
         />
       </div>
       <Suspense>
