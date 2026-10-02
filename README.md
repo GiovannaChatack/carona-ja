@@ -14,7 +14,9 @@ A documentação de cada funcionalidade fica em [`specs/`](./specs/). Slices con
 - [003 — Trajetos e registro de viagens](./specs/003-registro-viagens/spec.md): item de
   navegação "Viagens" (`/viagens`), com os trajetos em `/viagens/trajetos`;
 - [004 — Histórico de viagens](./specs/004-historico-viagens/spec.md): item de navegação
-  "Histórico" (`/historico`).
+  "Histórico" (`/historico`);
+- [005 — Controle de pagamentos](./specs/005-controle-pagamentos/spec.md): item de navegação
+  "Pagamentos" (`/pagamentos`), cobrança pelo WhatsApp e chave PIX.
 
 ## Pré-requisitos
 
@@ -251,14 +253,17 @@ grant execute on function public.<funcao>(<tipos>) to authenticated;
 As funções levantam erros com SQLSTATE próprios (`raise exception using errcode = 'CJ00x'`),
 que a action traduz para a mensagem no campo certo:
 
-| Código  | Significado                                                  |
-| ------- | ------------------------------------------------------------ |
-| `CJ001` | viagem duplicada no dia (pede confirmação; data no `detail`) |
-| `CJ002` | trajeto inexistente, de outra conta ou arquivado             |
-| `CJ003` | passageiro inexistente, de outra conta ou arquivado          |
-| `CJ004` | participações ou sentido inválidos                           |
-| `CJ005` | data e hora mais de 1 dia no futuro                          |
-| `CJ006` | viagem inexistente, de outra conta ou arquivada (edição)     |
+| Código  | Significado                                                            |
+| ------- | ---------------------------------------------------------------------- |
+| `CJ001` | viagem duplicada no dia (pede confirmação; data no `detail`)           |
+| `CJ002` | trajeto inexistente, de outra conta ou arquivado                       |
+| `CJ003` | passageiro inexistente, de outra conta ou arquivado                    |
+| `CJ004` | participações ou sentido inválidos                                     |
+| `CJ005` | data e hora mais de 1 dia no futuro                                    |
+| `CJ006` | viagem inexistente, de outra conta ou arquivada (edição)               |
+| `CJ007` | participação paga removida ou com valor alterado (nome no `detail`)    |
+| `CJ008` | data de pagamento no futuro ou anterior à viagem (motivo no `message`) |
+| `CJ009` | pagamento de viagem arquivada ou de valor zero                         |
 
 Modelos: `registrar_viagem` e `editar_viagem` em
 [`supabase/migrations/`](./supabase/migrations/).
@@ -277,6 +282,21 @@ Viagens não são excluídas pela interface: são arquivadas (`viagens.arquivada
 de totais, pendências e resumos dos próximos slices **MUST** filtrar `viagens.arquivada_em is null`
 (ou `viagens_resumo.arquivada_em is null`). O total de uma viagem vem sempre da view
 `viagens_resumo`, nunca é digitado nem guardado.
+
+### Pagamentos (slice 005)
+
+- A situação de pagamento é a coluna `viagem_passageiros.pago_em` (`date`, o dia em São Paulo;
+  nula = pendente). Marcar, desfazer e corrigir são `update` pela API, sob a RLS.
+- O trigger `validar_pagamento` garante as regras no banco (`CJ007`–`CJ009`): data entre o dia
+  da viagem e hoje, nada de pagamento em viagem arquivada ou de valor zero, e valor de
+  participação paga imutável. Remover um passageiro pago é barrado em `editar_viagem`.
+- As views `participacoes_detalhe` e `pendencias_passageiros` (`security_invoker`) são a
+  **única** definição de dívida: pendente = `pago_em is null`, `valor_centavos > 0` e viagem
+  ativa. Telas e resumos leem delas, sem repetir o filtro.
+- A chave PIX fica em `perfis.chave_pix`; a real nunca entra no repositório nem nos testes
+  (que usam `teste@exemplo.com`).
+- **Slice 006 (Resumo mensal)**: o valor recebido no mês **MUST** usar `pago_em` e ignorar
+  viagens arquivadas, como as views acima.
 
 ## Observação: pausa do plano gratuito do Supabase
 

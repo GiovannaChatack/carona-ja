@@ -238,3 +238,18 @@ export async function definirChavePixDeTeste() {
     .eq('id', user.id)
   if (error) throw error
 }
+
+// Trajeto da viagem registrada mais recentemente na conta (a sugestão do formulário, FR-014).
+// Os projetos mobile e desktop registram viagens ao mesmo tempo, então o teste compara com o
+// valor lido agora, e não com o trajeto que ele mesmo usou.
+export async function trajetoDaUltimaViagemPelaApi() {
+  const supabase = await clienteDeTeste()
+  const { data, error } = await supabase
+    .from('viagens')
+    .select('trajeto_id')
+    .order('criado_em', { ascending: false })
+    .limit(1)
+    .single()
+  if (error) throw error
+  return data.trajeto_id as string
+}

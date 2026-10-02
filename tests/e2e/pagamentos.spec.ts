@@ -1,4 +1,7 @@
+import { randomUUID } from 'node:crypto'
+
 import { expect, test, type Page } from '@playwright/test'
+import { createClient } from '@supabase/supabase-js'
 
 import { hojeEmSaoPaulo } from '../../lib/format'
 import {
@@ -87,9 +90,47 @@ test('sem sessão, /pagamentos leva ao login com o caminho de retorno (FR-026)',
   await expect(page).toHaveURL(/\/entrar\?proximo=%2Fpagamentos$/)
 })
 
+test('sem sessão, as views e a chave PIX não devolvem dados (FR-026, SC-007)', async () => {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  test.skip(!url || !anonKey, 'Defina NEXT_PUBLIC_SUPABASE_URL e NEXT_PUBLIC_SUPABASE_ANON_KEY.')
+  const anonimo = createClient(url!, anonKey!, { auth: { persistSession: false } })
+
+  // Sem sessão, a RLS devolve 0 linhas (ou a consulta é recusada).
+  for (const [tabela, colunas] of [
+    ['participacoes_detalhe', 'id, pago_em'],
+    ['pendencias_passageiros', 'passageiro_id, total_pendente_centavos'],
+    ['perfis', 'id, chave_pix'],
+  ]) {
+    const { data } = await anonimo.from(tabela).select(colunas)
+    expect(data ?? []).toHaveLength(0)
+  }
+
+  const { data: alteradas } = await anonimo
+    .from('viagem_passageiros')
+    .update({ pago_em: hoje })
+    .not('id', 'is', null)
+    .select('id')
+  expect(alteradas ?? []).toHaveLength(0)
+})
+
 test.describe('pagamentos', () => {
   test.skip(!email || !senha, 'Defina E2E_EMAIL e E2E_SENHA para rodar estes cenários.')
   test.afterAll(limparDadosDeTeste)
+
+  test('passageiro inexistente ou de outra conta: página não encontrada (FR-026)', async ({
+    page,
+  }) => {
+    await entrarComContaDeTeste(page, '/pagamentos')
+    const id = randomUUID()
+
+    await page.goto(`/pagamentos/${id}`)
+    await expect(page.getByText('Página não encontrada')).toBeVisible()
+    await page.goto(`/pagamentos/${id}/cobrar`)
+    await expect(page.getByText('Página não encontrada')).toBeVisible()
+    await page.goto('/pagamentos/abc')
+    await expect(page.getByText('Página não encontrada')).toBeVisible()
+  })
 
   test.describe('US1 – pendências e marcar pagamentos', () => {
     test('lista de pendências e pagamentos do passageiro', async ({ page }) => {
