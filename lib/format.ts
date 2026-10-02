@@ -59,6 +59,11 @@ export function formatDate(valor: Instante) {
   return data.format(paraDate(valor))
 }
 
+// Data de calendário "AAAA-MM-DD" (coluna date) → "DD/MM/AAAA", sem conversão de fuso.
+export function formatDataCampo(data: string) {
+  return `${data.slice(8, 10)}/${data.slice(5, 7)}/${data.slice(0, 4)}`
+}
+
 export function formatTime(valor: Instante) {
   return hora.format(paraDate(valor))
 }

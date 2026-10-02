@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import {
   formatCurrency,
+  formatDataCampo,
   formatDate,
   formatDateTime,
   formatMonth,
@@ -90,5 +91,15 @@ describe('hojeEmSaoPaulo', () => {
 
   it('usa o ano local na virada do ano', () => {
     expect(hojeEmSaoPaulo(new Date('2026-01-01T02:59:00Z'))).toBe('2025-12-31')
+  })
+})
+
+describe('formatDataCampo', () => {
+  it('converte AAAA-MM-DD em DD/MM/AAAA', () => {
+    expect(formatDataCampo('2026-09-28')).toBe('28/09/2026')
+  })
+
+  it('não desloca o dia por fuso', () => {
+    expect(formatDataCampo('2026-01-01')).toBe('01/01/2026')
   })
 })

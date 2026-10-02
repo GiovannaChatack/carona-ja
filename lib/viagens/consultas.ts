@@ -30,6 +30,7 @@ type DadosFormularioViagem = {
     sentido: Sentido
     data_hora: string
     participacoes: Record<string, string> // passageiro_id → valor em reais
+    pagos: Record<string, string> // passageiro_id → pago_em, só das participações pagas
   }
 }
 
@@ -115,6 +116,11 @@ export async function obterDadosFormularioViagem(
       participacoes: Object.fromEntries(
         participacoes.map((p) => [p.passageiro_id, centavosParaCampo(p.valor_centavos)]),
       ),
+      pagos: Object.fromEntries(
+        participacoes
+          .filter((p) => p.pago_em !== null)
+          .map((p) => [p.passageiro_id, p.pago_em as string]),
+      ),
     },
   }
 }
@@ -158,7 +164,7 @@ export const obterViagem = cache(
     const { data: participacoes, error: erroParticipacoes } = await supabase
       .from('viagem_passageiros')
       .select(
-        'id, passageiro_id, valor_centavos, passageiro:passageiros(nome, arquivado_em, valor_padrao_centavos)',
+        'id, passageiro_id, valor_centavos, pago_em, passageiro:passageiros(nome, arquivado_em, valor_padrao_centavos)',
       )
       .eq('viagem_id', id)
     if (erroParticipacoes) {

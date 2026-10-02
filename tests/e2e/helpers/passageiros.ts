@@ -195,3 +195,46 @@ export async function arquivarPelaApi(tabela: 'viagens' | 'trajetos', id: string
     .eq('id', id)
   if (error) throw error
 }
+
+// Marca participações como pagas pela API (slice 005). `data` é "AAAA-MM-DD".
+export async function marcarPagoPelaApi(participacaoIds: string[], data: string) {
+  const supabase = await clienteDeTeste()
+  const { error } = await supabase
+    .from('viagem_passageiros')
+    .update({ pago_em: data })
+    .in('id', participacaoIds)
+  if (error) throw error
+}
+
+export type ParticipacaoDeTeste = {
+  id: string
+  passageiro_id: string
+  valor_centavos: number
+  pago_em: string | null
+}
+
+// Participações de uma viagem de teste, para conferir a situação de pagamento.
+export async function participacoesDaViagemPelaApi(viagemId: string) {
+  const supabase = await clienteDeTeste()
+  const { data, error } = await supabase
+    .from('viagem_passageiros')
+    .select('id, passageiro_id, valor_centavos, pago_em')
+    .eq('viagem_id', viagemId)
+  if (error) throw error
+  return data as ParticipacaoDeTeste[]
+}
+
+// Grava sempre a mesma chave PIX de teste (idempotente). Nunca grava null: a chave é estado
+// global da conta, compartilhado pelos workers.
+export async function definirChavePixDeTeste() {
+  const supabase = await clienteDeTeste()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) throw new Error('Sessão de teste ausente.')
+  const { error } = await supabase
+    .from('perfis')
+    .update({ chave_pix: 'teste@exemplo.com' })
+    .eq('id', user.id)
+  if (error) throw error
+}
