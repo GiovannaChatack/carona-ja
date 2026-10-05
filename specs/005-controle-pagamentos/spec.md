@@ -4,7 +4,7 @@
 
 **Criado em**: 2026-10-01
 
-**Status**: Rascunho
+**Status**: Concluído (2026-10-05)
 
 **Entrada**: Descrição do usuário: "slice 005 controle de pagamentos, essa spec deve cobrir a
 cobrança dos passageiros. Nisso gostaria de uma forma de acessar o usuario e enviar uma mensagem
