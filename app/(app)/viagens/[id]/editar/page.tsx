@@ -32,6 +32,7 @@ export default async function EditarViagemPage({ params }: { params: Promise<{ i
         trajetos={formulario.trajetos}
         passageiros={formulario.passageiros}
         inicial={formulario.viagem}
+        pagos={formulario.viagem.pagos}
         maxDataHora={paraCampoDataHora(new Date(agora.getTime() + UM_DIA_MS))}
         textoEnviar="Salvar alterações"
         textoDuplicada="Salvar"

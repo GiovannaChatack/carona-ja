@@ -22,6 +22,7 @@ export type Participacao = {
   id: string
   passageiro_id: string
   valor_centavos: number
+  pago_em: string | null // "AAAA-MM-DD" (slice 005); nulo = pendente
   passageiro: { nome: string; arquivado_em: string | null; valor_padrao_centavos: number }
 }
 

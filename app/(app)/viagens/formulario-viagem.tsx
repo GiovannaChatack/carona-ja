@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { ERRO_CONEXAO, tratarFalhaDeConexao } from '@/lib/acoes-cliente'
-import { formatCurrency } from '@/lib/format'
+import { formatCurrency, formatDataCampo } from '@/lib/format'
 import type { Trajeto } from '@/lib/trajetos/tipos'
 import { rotuloTrajeto } from '@/lib/trajetos/validacao'
 import { centavosParaCampo, parseValorEmCentavos } from '@/lib/validacao'
@@ -33,6 +33,8 @@ type FormularioViagemProps = {
   textoEnviar: string
   textoDuplicada?: string
   hrefCancelar: string
+  // Só na edição: passageiro_id → pago_em. Participações pagas ficam travadas (FR-025).
+  pagos?: Record<string, string>
 }
 
 const estadoInicial: EstadoFormularioViagem = {}
@@ -66,6 +68,7 @@ export function FormularioViagem({
   textoEnviar,
   textoDuplicada = 'Registrar',
   hrefCancelar,
+  pagos = {},
 }: FormularioViagemProps) {
   // O formulário é controlado: na falha de conexão, o que foi preenchido continua na tela.
   const [estado, enviar, pendente] = useActionState(
@@ -222,23 +225,33 @@ export function FormularioViagem({
         <legend className="mb-2 text-sm leading-none font-medium">Passageiros</legend>
         <ul className="flex flex-col divide-y rounded-lg border">
           {passageiros.map((p) => {
-            const marcado = marcados.includes(p.id)
+            const pagoEm = pagos[p.id]
+            const marcado = Boolean(pagoEm) || marcados.includes(p.id)
             const erroValor = marcado ? errosValor[p.id] : undefined
             return (
               <li key={p.id} className="flex flex-col gap-2 px-3 py-2">
                 <div className="flex min-h-11 items-center gap-3">
-                  <label className="flex min-h-11 min-w-0 flex-1 cursor-pointer items-center gap-3">
+                  <label className="flex min-h-11 min-w-0 flex-1 cursor-pointer items-center gap-3 has-disabled:cursor-default">
                     <input
                       type="checkbox"
-                      name="passageiros"
+                      name={pagoEm ? undefined : 'passageiros'}
                       value={p.id}
                       checked={marcado}
+                      disabled={Boolean(pagoEm)}
                       onChange={(evento) => alternarPassageiro(p, evento.target.checked)}
                       className="size-5 shrink-0 accent-primary"
                     />
                     <span className="min-w-0 break-words">{p.nome}</span>
                     {p.arquivado_em && <Badge variant="secondary">Arquivado</Badge>}
+                    {pagoEm && <Badge variant="outline">Pago em {formatDataCampo(pagoEm)}</Badge>}
                   </label>
+                  {/* Campos desabilitados não são enviados: os ocultos mantêm a participação paga. */}
+                  {pagoEm && (
+                    <>
+                      <input type="hidden" name="passageiros" value={p.id} />
+                      <input type="hidden" name={`valor_${p.id}`} value={valores[p.id] ?? ''} />
+                    </>
+                  )}
                   {marcado && (
                     <div className="relative w-28 shrink-0">
                       <Label htmlFor={`valor_${p.id}`} className="sr-only">
@@ -252,7 +265,8 @@ export function FormularioViagem({
                       </span>
                       <Input
                         id={`valor_${p.id}`}
-                        name={`valor_${p.id}`}
+                        name={pagoEm ? undefined : `valor_${p.id}`}
+                        disabled={Boolean(pagoEm)}
                         inputMode="decimal"
                         autoComplete="off"
                         value={valores[p.id] ?? ''}

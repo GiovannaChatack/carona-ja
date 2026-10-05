@@ -1,4 +1,4 @@
-import { expect, type Page } from '@playwright/test'
+import { expect, type Cookie, type Page } from '@playwright/test'
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 
 // Usa uma conta de TESTE (nunca a conta do dono).
@@ -16,14 +16,23 @@ export function nomeDeTeste(base: string) {
   return nome
 }
 
-// Abre o destino (que leva ao login) e entra com a conta de teste.
+// Cookies da sessão do worker: o login pela tela acontece uma vez por worker, e não a cada
+// teste, para a suíte não esbarrar no limite de logins do Supabase Auth.
+let cookiesDaSessao: Cookie[] | null = null
+
+// Abre o destino com a sessão do worker; sem ela (ou se expirou), entra pela tela de login.
 export async function entrarComContaDeTeste(page: Page, destino: string) {
+  if (cookiesDaSessao) await page.context().addCookies(cookiesDaSessao)
   await page.goto(destino)
-  await page.getByLabel('E-mail').fill(email!)
-  await page.getByLabel('Senha').fill(senha!)
-  await page.getByRole('button', { name: 'Entrar' }).click()
-  await page.waitForURL((url) => url.pathname === destino)
+
+  if (new URL(page.url()).pathname !== destino) {
+    await page.getByLabel('E-mail').fill(email!)
+    await page.getByLabel('Senha').fill(senha!)
+    await page.getByRole('button', { name: 'Entrar' }).click()
+    await page.waitForURL((url) => url.pathname === destino)
+  }
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
+  cookiesDaSessao = await page.context().cookies()
 }
 
 // Cliente anon com a sessão da conta de teste, reaproveitado pelo worker. Sob a RLS; nunca usa a
@@ -194,4 +203,62 @@ export async function arquivarPelaApi(tabela: 'viagens' | 'trajetos', id: string
     .update({ [coluna]: new Date().toISOString() })
     .eq('id', id)
   if (error) throw error
+}
+
+// Marca participações como pagas pela API (slice 005). `data` é "AAAA-MM-DD".
+export async function marcarPagoPelaApi(participacaoIds: string[], data: string) {
+  const supabase = await clienteDeTeste()
+  const { error } = await supabase
+    .from('viagem_passageiros')
+    .update({ pago_em: data })
+    .in('id', participacaoIds)
+  if (error) throw error
+}
+
+export type ParticipacaoDeTeste = {
+  id: string
+  passageiro_id: string
+  valor_centavos: number
+  pago_em: string | null
+}
+
+// Participações de uma viagem de teste, para conferir a situação de pagamento.
+export async function participacoesDaViagemPelaApi(viagemId: string) {
+  const supabase = await clienteDeTeste()
+  const { data, error } = await supabase
+    .from('viagem_passageiros')
+    .select('id, passageiro_id, valor_centavos, pago_em')
+    .eq('viagem_id', viagemId)
+  if (error) throw error
+  return data as ParticipacaoDeTeste[]
+}
+
+// Grava sempre a mesma chave PIX de teste (idempotente). Nunca grava null: a chave é estado
+// global da conta, compartilhado pelos workers.
+export async function definirChavePixDeTeste() {
+  const supabase = await clienteDeTeste()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) throw new Error('Sessão de teste ausente.')
+  const { error } = await supabase
+    .from('perfis')
+    .update({ chave_pix: 'teste@exemplo.com' })
+    .eq('id', user.id)
+  if (error) throw error
+}
+
+// Trajeto da viagem registrada mais recentemente na conta (a sugestão do formulário, FR-014).
+// Os projetos mobile e desktop registram viagens ao mesmo tempo, então o teste compara com o
+// valor lido agora, e não com o trajeto que ele mesmo usou.
+export async function trajetoDaUltimaViagemPelaApi() {
+  const supabase = await clienteDeTeste()
+  const { data, error } = await supabase
+    .from('viagens')
+    .select('trajeto_id')
+    .order('criado_em', { ascending: false })
+    .limit(1)
+    .single()
+  if (error) throw error
+  return data.trajeto_id as string
 }

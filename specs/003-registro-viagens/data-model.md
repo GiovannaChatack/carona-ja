@@ -103,6 +103,10 @@ ativa ──arquivar──▶ arquivada ──reativar──▶ ativa
 Participação de um passageiro em uma viagem, com o valor cobrado dele naquela viagem. É a
 unidade que o slice de Pagamentos marcará como paga (ele acrescentará `pago_em`).
 
+> **Nota (slice 005)**: `pago_em` foi criado como `date` (não `timestamptz`), validado pelo
+> trigger `validar_pagamento`. Ver
+> [`specs/005-controle-pagamentos/data-model.md`](../005-controle-pagamentos/data-model.md).
+
 | Campo | Tipo | Regras |
 |-------|------|--------|
 | `id` | uuid | PK |

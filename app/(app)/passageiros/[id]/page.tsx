@@ -1,4 +1,4 @@
-import { ArrowLeft, History, Pencil } from 'lucide-react'
+import { ArrowLeft, History, Pencil, Wallet } from 'lucide-react'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { obterUsuarioLogado } from '@/lib/auth/sessao'
 import { formatCurrency, formatDate, formatPhone } from '@/lib/format'
+import { obterTotalDevido } from '@/lib/pagamentos/consultas'
 import { obterPassageiro } from '@/lib/passageiros/consultas'
 
 import { AcoesPassageiro } from './acoes-passageiro'
@@ -43,6 +44,7 @@ export default async function PassageiroPage({ params, searchParams }: Props) {
   const { de } = await searchParams
   const passageiro = await obterPassageiro(id)
   if (!passageiro) notFound()
+  const totalDevido = await obterTotalDevido(passageiro.id)
 
   const itens: [string, React.ReactNode][] = [
     [
@@ -91,6 +93,20 @@ export default async function PassageiroPage({ params, searchParams }: Props) {
               </div>
             ))}
           </dl>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardContent className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-1">
+            <h2 className="text-sm text-muted-foreground">Pagamentos</h2>
+            <p className="text-lg font-semibold">Total devido: {formatCurrency(totalDevido)}</p>
+          </div>
+          <Button asChild variant="outline">
+            <Link href={`/pagamentos/${passageiro.id}`}>
+              <Wallet data-icon="inline-start" aria-hidden />
+              Ver pagamentos
+            </Link>
+          </Button>
         </CardContent>
       </Card>
       {passageiro.arquivado_em && (

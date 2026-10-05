@@ -62,6 +62,13 @@ function erroDaFuncao(
       }
     case 'CJ006':
       return { erro: ERRO_NAO_ENCONTRADA, valores }
+    case 'CJ007':
+      return {
+        errosCampo: {
+          passageiros: `${erro.details ?? 'Um passageiro'} já pagou esta viagem. Desfaça o pagamento antes de alterar o valor ou removê-lo.`,
+        },
+        valores,
+      }
     default:
       return { erro: ERRO_GENERICO, valores }
   }

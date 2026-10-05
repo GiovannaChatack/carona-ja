@@ -128,6 +128,10 @@ aplicação validada ao salvar).
 > [`specs/003-registro-viagens/data-model.md`](../003-registro-viagens/data-model.md). O
 > `pago_em` ainda não existe; as FKs são compostas (`(viagem_id, motorista_id)` com `on delete
 > cascade` e `(passageiro_id, motorista_id)` com `on delete no action`).
+>
+> **Nota (slice 005)**: `pago_em` foi criado como `date` (o dia em São Paulo), e não
+> `timestamptz`, validado pelo trigger `validar_pagamento`. Ver
+> [`specs/005-controle-pagamentos/data-model.md`](../005-controle-pagamentos/data-model.md).
 
 | Campo | Tipo | Regras |
 |-------|------|--------|

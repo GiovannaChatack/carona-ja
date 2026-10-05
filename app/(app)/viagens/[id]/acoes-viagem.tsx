@@ -9,12 +9,12 @@ import { ERRO_CONEXAO, tratarFalhaDeConexao } from '@/lib/acoes-cliente'
 
 import { arquivarViagem, reativarViagem } from '../actions'
 
-type Props = { id: string; dataFormatada: string; arquivada: boolean }
+type Props = { id: string; dataFormatada: string; arquivada: boolean; pagas: number }
 
 const semConexao = () => ({ erro: ERRO_CONEXAO })
 
 // Arquivar e reativar; o sucesso redireciona (o AvisoUrl mostra o toast).
-export function AcoesViagem({ id, dataFormatada, arquivada }: Props) {
+export function AcoesViagem({ id, dataFormatada, arquivada, pagas }: Props) {
   const [estadoArquivar, arquivar, arquivando] = useActionState(
     tratarFalhaDeConexao(arquivarViagem.bind(null, id), semConexao),
     {},
@@ -34,10 +34,15 @@ export function AcoesViagem({ id, dataFormatada, arquivada }: Props) {
           Reativar
         </Button>
       ) : (
+        // Com participações pagas, a confirmação deixa a consequência explícita (FR-024).
         <ConfirmDialog
-          titulo="Arquivar viagem?"
-          descricao={`A viagem de ${dataFormatada} deixará de ser considerada em totais e pendências. Você pode reativá-la depois.`}
-          textoConfirmar="Arquivar"
+          titulo={pagas > 0 ? 'Arquivar viagem com pagamentos?' : 'Arquivar viagem?'}
+          descricao={
+            pagas > 0
+              ? `${pagas} ${pagas === 1 ? 'passageiro já pagou' : 'passageiros já pagaram'} esta viagem. Esses valores deixarão de ser contados. Os pagamentos ficam guardados e voltam se você reativar a viagem.`
+              : `A viagem de ${dataFormatada} deixará de ser considerada em totais e pendências. Você pode reativá-la depois.`
+          }
+          textoConfirmar={pagas > 0 ? 'Arquivar mesmo assim' : 'Arquivar'}
           onConfirmar={() => startTransition(arquivar)}
           gatilho={
             <Button variant="secondary" disabled={pendente}>

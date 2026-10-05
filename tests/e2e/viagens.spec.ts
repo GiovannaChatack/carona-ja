@@ -8,6 +8,7 @@ import {
   prepararCenario,
   registrarViagemPelaApi,
   senha,
+  trajetoDaUltimaViagemPelaApi,
   type Cenario,
 } from './helpers/passageiros'
 
@@ -112,9 +113,13 @@ test.describe('US2 – registrar viagem', () => {
     await expect(item).toContainText(/R\$\s18,50/)
     await expect(item.getByText('2', { exact: true })).toBeVisible()
 
-    // A viagem mais recente define o trajeto sugerido (FR-014).
-    await page.goto('/viagens/nova')
-    await expect(page.getByLabel('Trajeto')).toHaveValue(c.trajeto.id)
+    // A viagem mais recente da conta define o trajeto sugerido (FR-014). O outro projeto pode
+    // registrar uma viagem no meio: compara com a mais recente lida agora e tenta de novo.
+    await expect(async () => {
+      await page.goto('/viagens/nova')
+      const esperado = await trajetoDaUltimaViagemPelaApi()
+      await expect(page.getByLabel('Trajeto')).toHaveValue(esperado, { timeout: 2_000 })
+    }).toPass({ timeout: 20_000 })
   })
 
   test('viagem duplicada no dia pede confirmação', async ({ page }) => {
