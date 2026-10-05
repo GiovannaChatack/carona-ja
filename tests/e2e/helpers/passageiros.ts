@@ -1,4 +1,4 @@
-import { expect, type Page } from '@playwright/test'
+import { expect, type Cookie, type Page } from '@playwright/test'
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 
 // Usa uma conta de TESTE (nunca a conta do dono).
@@ -16,14 +16,23 @@ export function nomeDeTeste(base: string) {
   return nome
 }
 
-// Abre o destino (que leva ao login) e entra com a conta de teste.
+// Cookies da sessão do worker: o login pela tela acontece uma vez por worker, e não a cada
+// teste, para a suíte não esbarrar no limite de logins do Supabase Auth.
+let cookiesDaSessao: Cookie[] | null = null
+
+// Abre o destino com a sessão do worker; sem ela (ou se expirou), entra pela tela de login.
 export async function entrarComContaDeTeste(page: Page, destino: string) {
+  if (cookiesDaSessao) await page.context().addCookies(cookiesDaSessao)
   await page.goto(destino)
-  await page.getByLabel('E-mail').fill(email!)
-  await page.getByLabel('Senha').fill(senha!)
-  await page.getByRole('button', { name: 'Entrar' }).click()
-  await page.waitForURL((url) => url.pathname === destino)
+
+  if (new URL(page.url()).pathname !== destino) {
+    await page.getByLabel('E-mail').fill(email!)
+    await page.getByLabel('Senha').fill(senha!)
+    await page.getByRole('button', { name: 'Entrar' }).click()
+    await page.waitForURL((url) => url.pathname === destino)
+  }
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
+  cookiesDaSessao = await page.context().cookies()
 }
 
 // Cliente anon com a sessão da conta de teste, reaproveitado pelo worker. Sob a RLS; nunca usa a
